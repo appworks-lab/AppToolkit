@@ -50,6 +50,14 @@ pub fn run_command_on_unix(program: &str) -> anyhow::Result<Output> {
     Ok(output)
 }
 
+pub fn run_command_on_windows(program: &str) -> anyhow::Result<Output> {
+    let output = Command::new("cmd")
+        .args(["/C", program])
+        .output()
+        .expect("failed to execute process");
+    Ok(output)
+}
+
 pub fn is_cmd_exists<T: AsRef<str>>(program: T) -> anyhow::Result<bool> {
     if cfg!(windows) {
         is_windows_cmd_exists(program)

@@ -3,15 +3,15 @@ mod macos;
 mod windows;
 
 use core::fmt;
-use std::fmt::Display;
-use std::path::Path;
-use std::{env, str::FromStr};
-
+use std::{fmt::Display, path::Path, env, str::FromStr};
 use anyhow::Result;
+use backtrace::Backtrace;
+use console::style;
+use indicatif::ProgressBar;
 use path_absolutize::*;
 use tokio::fs;
-
 use serde::{Deserialize, Serialize};
+use crate::{ERROR_EMOJI, SUCCESS_EMOJI};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct ToolsInstallationInfo {
@@ -122,6 +122,48 @@ pub struct ToolInstallationInfo {
     pub post_install: Option<String>,
 }
 
+pub enum InstallStatus {
+    AlreadyInstalled,
+    Installed,
+}
+
+fn handle_installation_finish_message(
+    pb: &ProgressBar,
+    tool_name: &str,
+    result: Result<InstallStatus>,
+    installation_results: &mut Vec<String>,
+) {
+    if let Err(err) = result {
+        let bt = Backtrace::new();
+        pb.finish_with_message("waiting...");
+        eprintln!("Error: {:?}\n Backtrace: {:?}", err, bt);
+        installation_results.push(format!(
+            "{} {}: Failed to install. Reason: {}",
+            ERROR_EMOJI,
+            style(tool_name).bold(),
+            err
+        ));
+    } else {
+        pb.finish_with_message("waiting...");
+        match result.expect("result has error") {
+            InstallStatus::AlreadyInstalled => {
+                installation_results.push(format!(
+                    "{} {}: Already installed",
+                    SUCCESS_EMOJI,
+                    style(tool_name).bold()
+                ));
+            }
+            InstallStatus::Installed => {
+                installation_results.push(format!(
+                    "{} {}: Installed Successfully",
+                    SUCCESS_EMOJI,
+                    style(tool_name).bold()
+                ));
+            }
+        }
+    }
+}
+
 async fn get_toolkit_config(config_path: &str) -> Result<ToolsInstallationInfo> {
     let config = if config_path.starts_with("http") {
         let config: ToolsInstallationInfo = reqwest::get(config_path).await?.json().await?;
@@ -137,17 +179,18 @@ async fn get_toolkit_config(config_path: &str) -> Result<ToolsInstallationInfo> 
 
 pub async fn install(config_path: &str) -> Result<()> {
     let tools_installation_info = get_toolkit_config(config_path).await?;
-    let filter_tools_installation_info = filter_install_tools(&tools_installation_info)?;
-    println!("filtered tools_installation_info: {:#?}", filter_tools_installation_info);
+    let filtered_tools_installation_info = filter_install_tools(&tools_installation_info)?;
+    println!("filtered tools_installation_info: {:#?}", filtered_tools_installation_info);
     match env::consts::OS {
         "macos" => {
-            macos::install(filter_tools_installation_info).await?;
+            macos::install(filtered_tools_installation_info).await?;
         }
         "linux" => {
             linux::install().await?;
         }
         "windows" => {
-            windows::install().await?;
+            #[cfg(target_os = "windows")]
+            windows::install(filtered_tools_installation_info).await?;
         }
         _ => return Err(anyhow::anyhow!("Unsupported OS {}", std::env::consts::OS)),
     };

@@ -1,9 +1,7 @@
 use crate::{
-    download_file, extract_zip, is_cmd_exists, run_command_on_unix, run_command_pipe_on_unix, ToolInstallationInfo,
-    Type, ERROR_EMOJI, SPINNER_STYLE, SUCCESS_EMOJI,
+    download_file, extract_zip, is_cmd_exists, run_command_on_unix, run_command_pipe_on_unix, InstallStatus, ToolInstallationInfo, Type, SPINNER_STYLE
 };
 use anyhow::Result;
-use backtrace::Backtrace;
 use console::style;
 use indicatif::{MultiProgress, ProgressBar};
 use std::clone::Clone;
@@ -12,6 +10,8 @@ use std::sync::{Arc, Mutex};
 use std::{path::Path, time::Duration};
 use tokio::fs;
 use walkdir::WalkDir;
+
+use super::handle_installation_finish_message;
 
 pub async fn install(tools_installation_info: Vec<ToolInstallationInfo>) -> Result<()> {
     let multi_progress = MultiProgress::new();
@@ -23,7 +23,6 @@ pub async fn install(tools_installation_info: Vec<ToolInstallationInfo>) -> Resu
         .into_iter()
         .enumerate()
         .map(|(index, tool_installation_info)| {
-            // Change closure from FnMut to Fn
             let pb = multi_progress.add(ProgressBar::new(100));
             pb.set_style(SPINNER_STYLE.clone());
             pb.set_prefix(format!("[{}/{}]", index + 1, tools_count));
@@ -64,8 +63,9 @@ pub async fn install(tools_installation_info: Vec<ToolInstallationInfo>) -> Resu
                     }
                     _ => {
                         pb.finish_with_message(format!(
-                            "Unsupported installation type: {}",
-                            style(&tool_installation_info.r#type).bold()
+                            "Unsupported installation type: {}. App: {}",
+                            style(&tool_installation_info.r#type).bold(),
+                            style(&tool_installation_info.name).bold()
                         ));
                     }
                 }
@@ -81,7 +81,7 @@ pub async fn install(tools_installation_info: Vec<ToolInstallationInfo>) -> Resu
         });
     futures::future::join_all(handles).await;
     // clear the progress bar
-    multi_progress.clear().expect("Failed to clear progress bar");
+    multi_progress.clear().expect("failed to clear progress bar");
     // print the installation results
     let installation_results = installation_results.lock().unwrap();
     for result in installation_results.iter() {
@@ -91,62 +91,21 @@ pub async fn install(tools_installation_info: Vec<ToolInstallationInfo>) -> Resu
     Ok(())
 }
 
-fn handle_installation_finish_message(
-    pb: &ProgressBar,
-    tool_name: &str,
-    result: Result<InstallStatus>,
-    installation_results: &mut Vec<String>,
-) {
-    if let Err(err) = result {
-        let bt = Backtrace::new();
-        pb.finish_with_message("waiting...");
-        eprintln!("Error: {:?}\n Backtrace: {:?}", err, bt);
-        installation_results.push(format!(
-            "{} {}: Failed to install. Reason: {}",
-            ERROR_EMOJI,
-            style(tool_name).bold(),
-            err
-        ));
-    } else {
-        pb.finish_with_message("waiting...");
-        match result.expect("result has error") {
-            InstallStatus::AlreadyInstalled => {
-                installation_results.push(format!(
-                    "{} {}: Already installed",
-                    SUCCESS_EMOJI,
-                    style(tool_name).bold()
-                ));
-            }
-            InstallStatus::Installed => {
-                installation_results.push(format!(
-                    "{} {}: Installed Successfully",
-                    SUCCESS_EMOJI,
-                    style(tool_name).bold()
-                ));
-            }
-        }
-    }
-}
-
-enum InstallStatus {
-    AlreadyInstalled,
-    Installed,
-}
-
 async fn install_tool_by_zip(
     id: &str,
     source: &str,
     post_install: Option<&str>,
-    message_callback: impl Fn(&str),
+    set_process_message: impl Fn(&str),
 ) -> Result<InstallStatus> {
     if is_app_installed(id) {
         Ok(InstallStatus::AlreadyInstalled)
     } else {
-        message_callback("Downloading...");
+        set_process_message("Downloading...");
         let zip_path = download_file(source).await?;
-        message_callback("Extracting zip to `/Applications` directory...");
+        set_process_message("Extracting zip to `/Applications` directory...");
         extract_zip(&zip_path, "/Applications")?;
         if let Some(post_install) = post_install {
+            set_process_message("Running post-install script...");
             run_command_on_unix(post_install)?;
         }
         if fs::try_exists(&zip_path).await? {
@@ -161,17 +120,18 @@ async fn install_tool_by_dmg(
     id: &str,
     source: &str,
     post_install: Option<&str>,
-    message_callback: impl Fn(&str) + Clone,
+    set_process_message: impl Fn(&str) + Clone,
 ) -> Result<InstallStatus> {
     if is_app_installed(id) {
         Ok(InstallStatus::AlreadyInstalled)
     } else {
-        message_callback("Downloading...");
+        set_process_message("Downloading...");
         let dmg_path = download_file(source).await?;
 
-        install_dmg(id, &dmg_path, message_callback)?;
+        install_dmg(id, &dmg_path, &set_process_message)?;
 
         if let Some(post_install) = post_install {
+            set_process_message("Running post-install script...");
             run_command_on_unix(post_install)?;
         }
 
@@ -185,45 +145,48 @@ async fn install_tool_by_shell(
     id: &str,
     source: &str,
     post_install: Option<&str>,
-    message_callback: impl Fn(&str),
+    set_process_message: impl Fn(&str),
 ) -> Result<InstallStatus> {
     if is_cmd_exists(id)? {
         Ok(InstallStatus::AlreadyInstalled)
     } else {
+        run_command_pipe_on_unix(source, &set_process_message)?;
+
         if let Some(post_install) = post_install {
+            set_process_message("Running post-install script...");
             run_command_on_unix(post_install)?;
         }
-        run_command_pipe_on_unix(source, message_callback)?;
+
         Ok(InstallStatus::Installed)
     }
 }
 
-fn install_dmg(id: &str, dmg_path: &Path, message_callback: impl Fn(&str) + Clone) -> Result<()> {
+fn install_dmg(id: &str, dmg_path: &Path, set_process_message: impl Fn(&str) + Clone) -> Result<()> {
     // 1. mount the dmg
-    message_callback("Mounting...");
+    set_process_message("Mounting...");
     run_command_pipe_on_unix(
         &format!("hdiutil attach {}", dmg_path.to_str().unwrap()),
-        message_callback.clone(),
+        set_process_message.clone(),
     )?;
-    message_callback("Mounted successfully!");
+    set_process_message("Mounted successfully!");
 
     let volumes_app_path = find_app(id).expect("failed to find the app in /Volumes");
 
     // 2. copy the app to /Applications
-    message_callback("Copying to `/Applications` directory...");
+    set_process_message("Copying to `/Applications` directory...");
     let command = format!(r#"cp -R "{}" /Applications"#, volumes_app_path.to_string_lossy());
-    run_command_pipe_on_unix(&command, message_callback.clone())?;
-    message_callback("Copied successfully!");
+    run_command_pipe_on_unix(&command, set_process_message.clone())?;
+    set_process_message("Copied successfully!");
 
     // 3. unmount the dmg
-    message_callback("Unmounting...");
+    set_process_message("Unmounting...");
     let volumes_app_parent_path = volumes_app_path
         .parent()
         .expect("failed to get volumes app's parent path")
         .to_string_lossy();
     let command = format!(r#"hdiutil detach "{}""#, volumes_app_parent_path);
-    run_command_pipe_on_unix(&command, message_callback.clone())?;
-    message_callback("Unmounted successfully!");
+    run_command_pipe_on_unix(&command, set_process_message.clone())?;
+    set_process_message("Unmounted successfully!");
 
     Ok(())
 }
@@ -239,7 +202,7 @@ fn find_app(app_file_name: &str) -> Result<PathBuf> {
         }
     }
 
-    Err(anyhow::anyhow!("Failed to find the app in /Volumes"))
+    Err(anyhow::anyhow!("failed to find the app in /Volumes"))
 }
 
 fn is_app_installed(id: &str) -> bool {
