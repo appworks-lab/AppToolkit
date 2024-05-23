@@ -1,9 +1,0 @@
-# 忽略目录
-dist/
-release/
-demo/
-tests/
-__test__
-
-# node 覆盖率文件
-coverage/

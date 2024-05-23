@@ -1,25 +1,2 @@
-# See https://help.github.com/ignore-files/ for more about ignoring files.
-
-# dependencies
-node_modules/
-
-# lock
-package-lock.json
-yarn.lock
-
-# production
-dist/
-release/
-
-# misc
-.idea/
-.happypack
-.DS_Store
-*.swp
-*.dia~
-.ice
-
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
+/target
+tmp/

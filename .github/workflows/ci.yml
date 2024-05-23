@@ -1,21 +1,81 @@
-name: ci
+name: Tests and release
 
-on: [push]
+on:
+  # push:
+  #   branches:
+  #     - main
+  #   tags-ignore:
+  #     - '**'
+  # pull_request:
+  workflow_dispatch
 
 jobs:
-  build-and-lint:
-    runs-on: ubuntu-latest
+  test:
+    name: ${{ matrix.platform.os_name }} with rust ${{ matrix.toolchain }}
+    runs-on: ${{ matrix.platform.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - os_name: Windows-x86_64
+            os: windows-latest
+            target: x86_64-pc-windows-msvc
+            bin: toolkit.exe
+          - os_name: macOS-x86_64
+            # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners/about-github-hosted-runners#standard-github-hosted-runners-for-public-repositories
+            os: macos-13
+            target: x86_64-apple-darwin
+            bin: toolkit
+          - os_name: macOS-aarch64
+            os: macos-latest
+            target: aarch64-apple-darwin
+            skip_tests: true
+            bin: toolkit
+        toolchain: [stable]
     steps:
-      - uses: actions/checkout@v1
-      - name: Set branch name
-        run: echo >>$GITHUB_ENV BRANCH_NAME=${GITHUB_REF#refs/heads/}
-      - name: Echo branch name
-        run: echo ${BRANCH_NAME}
-      - uses: actions/setup-node@v1
+      - uses: actions/checkout@v4
+      - name: Cache cargo & target directories
+        uses: Swatinem/rust-cache@v2
         with:
-          node-version: 12
-          registry-url: https://registry.npmjs.org/
-      - name: Install Dependencies
-        run: npm run setup
-      - name: Lint
-        run: npm run lint
+          key: "v2"
+      - name: Build binary
+        uses: houseabsolute/actions-rust-cross@v0
+        with:
+          command: "build"
+          target: ${{ matrix.platform.target }}
+          toolchain: ${{ matrix.toolchain }}
+          args: "--locked --release"
+          strip: true
+      - name: Run tests
+        uses: houseabsolute/actions-rust-cross@v0
+        with:
+          command: "test"
+          target: ${{ matrix.platform.target }}
+          toolchain: ${{ matrix.toolchain }}
+          args: "--locked --release"
+        if: ${{ !matrix.platform.skip_tests }}
+      - name: Move binary to bin directory
+        run: |
+          mkdir -p bin
+          if [[ "${{ matrix.platform.os }}" == "windows-latest" ]]; then
+            move target/${{ matrix.platform.target }}/release/${{ matrix.platform.bin }} bin/${{ matrix.platform.os_name }}-${{ matrix.platform.bin }}
+          else
+            mv target/${{ matrix.platform.target }}/release/${{ matrix.platform.bin }} bin/${{ matrix.platform.os_name }}-${{ matrix.platform.bin }}
+          fi
+        if: matrix.toolchain == 'stable' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/tags/test-release')
+      - name: Publish release binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: toolkit-${{ matrix.platform.os_name }}
+          path: bin/${{ matrix.platform.os_name }}-${{ matrix.platform.bin }}
+        if: matrix.toolchain == 'stable' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/tags/test-release')
+      - name: Generate SHA-256
+        run: shasum -a 256 bin/${{ matrix.platform.os_name }}-${{ matrix.platform.bin }} > bin/${{ matrix.platform.os_name }}-${{ matrix.platform.bin }}.sha256
+        if: matrix.toolchain == 'stable' && startsWith(matrix.platform.os, 'macOS') && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/tags/test-release')
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          files: "bin/*"
+          body_path: CHANGELOG.md
+        if: matrix.toolchain == 'stable' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/tags/test-release')

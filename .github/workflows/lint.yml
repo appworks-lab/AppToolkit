@@ -1,0 +1,29 @@
+name: Lint
+
+on:
+  # push:
+  #   branches:
+  #     - main
+  #   tags-ignore:
+  #     - '**'
+  # pull_request:
+  workflow_dispatch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  lint:
+    name: Lint
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - uses: actions/setup-python@v3
+
+      - name: Run pre-commit
+        uses: ./.github/actions/pre-commit

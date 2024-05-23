@@ -1,0 +1,85 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "The tools installation info on Mac/Windows/Linux OS.",
+  "type": "object",
+  "properties": {
+    "tools": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the tool."
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the tool."
+          },
+          "installations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "os": {
+                  "type": "string",
+                  "enum": [
+                    "macos",
+                    "windows",
+                    "linux"
+                  ],
+                  "description": "Operating system for which the tool is to be installed."
+                },
+                "arch": {
+                  "type": "string",
+                  "enum": [
+                    "x86_64",
+                    "aarch64"
+                  ],
+                  "description": "Architecture for which the tool is to be installed."
+                },
+                "id": {
+                  "type": "string",
+                  "description": "The ID of the tool which is used to identify whether the tool is installed or not. For example, 'brew' for Homebrew, 'Visual Studio Code.app' for Visual Studio Code, etc."
+                },
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "dmg",
+                    "zip",
+                    "exe",
+                    "shell",
+                    "deb"
+                  ],
+                  "description": "Type of the installation tool. Toolkit will use different methods to install the package based on the type."
+                },
+                "source": {
+                  "type": "string",
+                  "description": "The Source which how to download and install the tool."
+                },
+                "postInstall": {
+                  "type": "string",
+                  "description": "The command to run after the installation of the tool."
+                }
+              },
+              "required": [
+                "os",
+                "id",
+                "type",
+                "source"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "installType": {
+      "type": "string",
+      "enum": [
+        "parallel",
+        "sequential"
+      ],
+      "description": "The type of installation. 'parallel' installs all the tools in parallel, 'sequential' installs the tools one by one."
+    }
+  }
+}
