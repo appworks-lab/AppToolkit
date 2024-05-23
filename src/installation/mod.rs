@@ -3,6 +3,7 @@ mod macos;
 mod windows;
 
 use core::fmt;
+use std::fmt::Display;
 use std::path::Path;
 use std::{env, str::FromStr};
 
@@ -17,6 +18,12 @@ pub struct ToolsInstallationInfo {
     pub tools: Vec<Tool>,
     #[serde(rename = "postInstall", default)]
     pub install_type: InstallationType,
+}
+
+impl Display for ToolsInstallationInfo {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "ToolsInstallationInfo: {:?}", self.tools)
+    }
 }
 
 // TODO: support sequential it in the future
@@ -103,6 +110,7 @@ impl fmt::Display for Type {
         }
     }
 }
+#[derive(Debug)]
 pub struct ToolInstallationInfo {
     pub name: String,
     pub description: String,
@@ -129,10 +137,11 @@ async fn get_toolkit_config(config_path: &str) -> Result<ToolsInstallationInfo> 
 
 pub async fn install(config_path: &str) -> Result<()> {
     let tools_installation_info = get_toolkit_config(config_path).await?;
-    let final_tools_installation_info = filter_install_tools(&tools_installation_info)?;
+    let filter_tools_installation_info = filter_install_tools(&tools_installation_info)?;
+    println!("filtered tools_installation_info: {:#?}", filter_tools_installation_info);
     match env::consts::OS {
         "macos" => {
-            macos::install(final_tools_installation_info).await?;
+            macos::install(filter_tools_installation_info).await?;
         }
         "linux" => {
             linux::install().await?;
@@ -201,13 +210,13 @@ mod test_get_toolkit_config_fn {
     }
 }
 
+#[cfg(target_os = "macos")]
 #[cfg(test)]
 mod test_install_fn_on_macos {
     use super::*;
 
     use crate::run_command_on_unix;
 
-    #[cfg(target_os = "macos")]
     #[tokio::test]
     async fn test_install_on_mac() -> Result<()> {
         install("./tools-installation-info.json").await?;
@@ -231,7 +240,15 @@ mod test_install_fn_on_macos {
 
 #[cfg(target_os = "windows")]
 #[cfg(test)]
-mod test_install_fn_on_windows {}
+mod test_install_fn_on_windows {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_install_on_windows() -> Result<()> {
+        super::install("./tools-installation-info.json").await?;
+        Ok(())
+    }
+}
 
 #[cfg(target_os = "linux")]
 #[cfg(test)]
