@@ -6,7 +6,7 @@ use std::{
     process::{Command, Stdio},
 };
 
-pub fn run_command_pipe_on_unix(program: &str, message_callback: impl Fn(&str)) -> anyhow::Result<()> {
+pub fn run_command_pipe_on_unix(program: &str, set_process_message: impl Fn(&str)) -> anyhow::Result<()> {
     let shell = get_default_shell();
     let unix_config_path = get_unix_shell_config_path(&shell);
     let mut command = if Path::new(&unix_config_path).exists() {
@@ -24,7 +24,7 @@ pub fn run_command_pipe_on_unix(program: &str, message_callback: impl Fn(&str)) 
     if let Some(ref mut stdout) = child.stdout {
         let reader = BufReader::new(stdout);
         for line in reader.lines() {
-            message_callback(line?.as_str());
+            set_process_message(line?.as_str());
         }
     } else if let Some(ref mut stderr) = child.stderr {
         let reader = BufReader::new(stderr);

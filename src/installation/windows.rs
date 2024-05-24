@@ -1,17 +1,24 @@
 #[cfg(target_os = "windows")]
-pub mod windows {
+pub mod windows_installation {
     extern crate winreg;
 
-    use std::{collections::HashSet, sync::{Arc, Mutex}, time::Duration};
+    use std::{
+        collections::HashSet,
+        sync::{Arc, Mutex},
+        time::Duration,
+    };
 
+    use anyhow::Result;
     use console::style;
     use indicatif::{MultiProgress, ProgressBar};
-    use winreg::RegKey;
     use winreg::enums::*;
+    use winreg::RegKey;
     use winreg::HKEY;
-    use anyhow::Result;
 
-    use crate::{download_file, installation::handle_installation_finish_message, run_command_on_windows, InstallStatus, ToolInstallationInfo, Type, SPINNER_STYLE};
+    use crate::{
+        download_file, installation::handle_installation_finish_message, run_command_on_windows, InstallStatus,
+        ToolInstallationInfo, Type, SPINNER_STYLE,
+    };
 
     pub async fn install(tools_installation_info: Vec<ToolInstallationInfo>) -> Result<()> {
         let multi_progress = MultiProgress::new();
@@ -43,10 +50,13 @@ pub mod windows {
                                 &tool_installation_info.source,
                                 tool_installation_info.post_install.as_deref(),
                                 &installed_app_display_names,
-                                |msg| pb.set_message(format!("{}: {}", style(&tool_installation_info.name).bold(), msg)),
-                            ).await;
+                                |msg| {
+                                    pb.set_message(format!("{}: {}", style(&tool_installation_info.name).bold(), msg))
+                                },
+                            )
+                            .await;
                             installation_result = Some(exe_installation_result);
-                        },
+                        }
                         _ => {
                             let errror_message = format!(
                                 "Unsupported installation type: {}. App: {}",
@@ -66,7 +76,7 @@ pub mod windows {
                         );
                     }
                 })
-        });
+            });
 
         futures::future::join_all(handles).await;
         // clear the progress bar
@@ -85,9 +95,18 @@ pub mod windows {
         let mut display_names_set: HashSet<String> = HashSet::new();
 
         let paths: Vec<(HKEY, &str)> = vec![
-            (HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall"),
-            (HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall"),
-            // (HKEY_LOCAL_MACHINE, "Software\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall"),
+            (
+                HKEY_CURRENT_USER,
+                "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall",
+            ),
+            (
+                HKEY_LOCAL_MACHINE,
+                "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall",
+            ),
+            (
+                HKEY_LOCAL_MACHINE,
+                "Software\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall",
+            ),
         ];
 
         for path in paths {
@@ -117,7 +136,12 @@ pub mod windows {
                 }
             }
         } else {
-            eprintln!("Failed to open subkey. The path is {}. The hkey is {}. Reason: {:?}", path, hkey, uninstall.err());
+            eprintln!(
+                "Failed to open subkey. The path is {}. The hkey is {}. Reason: {:?}",
+                path,
+                hkey,
+                uninstall.err()
+            );
         }
 
         display_names
