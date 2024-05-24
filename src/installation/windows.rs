@@ -106,15 +106,20 @@ pub mod windows {
         let mut display_names: Vec<String> = Vec::new();
 
         let hkcu = RegKey::predef(hkey);
-        let uninstall = hkcu.open_subkey_with_flags(path, KEY_READ).expect("failed to open uninstall key");
 
-        for key_result in uninstall.enum_keys().map(|x| x.unwrap()) {
-            let key: RegKey = uninstall.open_subkey_with_flags(&key_result, KEY_READ).unwrap();
+        let uninstall = hkcu.open_subkey_with_flags(path, KEY_READ);
+        if let Ok(uninstall) = uninstall {
+            for key_result in uninstall.enum_keys().map(|x| x.unwrap()) {
+                let key: RegKey = uninstall.open_subkey_with_flags(&key_result, KEY_READ).unwrap();
 
-            if let Ok(display_name) = key.get_value::<String, _>("DisplayName") {
-                display_names.push(display_name);
+                if let Ok(display_name) = key.get_value::<String, _>("DisplayName") {
+                    display_names.push(display_name);
+                }
             }
+        } else {
+            eprintln!("Failed to open subkey. The path is {}. The hkey is {}. Reason: {:?}", path, hkey, uninstall.err());
         }
+
         display_names
     }
 
