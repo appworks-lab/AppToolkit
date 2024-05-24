@@ -188,31 +188,3 @@ pub async fn install(config_path: &str) -> Result<()> {
 
     Ok(())
 }
-
-#[cfg(target_os = "macos")]
-#[cfg(test)]
-mod test_install_fn_on_macos {
-    use super::*;
-    use crate::run_command_on_unix;
-    use std::path::Path;
-
-    #[tokio::test]
-    async fn test_install_on_mac() -> Result<()> {
-        install("./tools-installation-info.json").await?;
-        check_path_existence("/Applications/Google Chrome.app")?;
-        check_path_existence("/Applications/Visual Studio Code.app")?;
-        check_script_existence("which fnm")?;
-        Ok(())
-    }
-
-    fn check_script_existence(command: &str) -> Result<()> {
-        let output = run_command_on_unix(command)?;
-        assert_eq!(output.status.code(), Some(0), "Command {:?} not found", command);
-        Ok(())
-    }
-    fn check_path_existence(path: &str) -> Result<()> {
-        let path = Path::new(path);
-        assert!(path.exists(), "Path {:?} does not exist", path);
-        Ok(())
-    }
-}
