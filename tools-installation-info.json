@@ -1,5 +1,5 @@
 {
-  "$schema": "./toolkit.schema.json",
+  "$schema": "https://gist.githubusercontent.com/luhc228/a71577a3a10688469f0e8e3a44b99cc5/raw/c1fb0541a183adf2d2d54c2f1da8b49a9f81c8e1/toolkit.installation-info.schema.json",
   "tools": [
     {
       "name": "Visual Studio Code",
