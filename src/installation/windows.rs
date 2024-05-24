@@ -1,5 +1,5 @@
 #[cfg(target_os = "windows")]
-mod windows {
+pub mod windows {
     extern crate winreg;
 
     use std::{collections::HashSet, sync::{Arc, Mutex}, time::Duration};
@@ -11,7 +11,7 @@ mod windows {
     use winreg::HKEY;
     use anyhow::Result;
 
-    use crate::{run_command_on_windows, InstallStatus, ToolInstallationInfo, Type, SPINNER_STYLE};
+    use crate::{download_file, installation::handle_installation_finish_message, run_command_on_windows, InstallStatus, ToolInstallationInfo, Type, SPINNER_STYLE};
 
     pub async fn install(tools_installation_info: Vec<ToolInstallationInfo>) -> Result<()> {
         let multi_progress = MultiProgress::new();
@@ -31,6 +31,7 @@ mod windows {
                 pb.enable_steady_tick(Duration::from_millis(120));
 
                 let installation_results = Arc::clone(&installation_results);
+                let installed_app_display_names = installed_app_display_names.clone();
 
                 tokio::spawn(async move {
                     let mut installation_result: Option<Result<InstallStatus, anyhow::Error>> = None;
@@ -43,15 +44,17 @@ mod windows {
                                 tool_installation_info.post_install.as_deref(),
                                 &installed_app_display_names,
                                 |msg| pb.set_message(format!("{}: {}", style(&tool_installation_info.name).bold(), msg)),
-                            );
+                            ).await;
                             installation_result = Some(exe_installation_result);
                         },
                         _ => {
-                            pb.finish_with_message(format!(
+                            let errror_message = format!(
                                 "Unsupported installation type: {}. App: {}",
                                 style(&tool_installation_info.r#type).bold(),
-                                style(&tool_installation_info.name).bold()
-                            ));
+                                style(&tool_installation_info.name).bold(),
+                            );
+                            pb.finish_with_message(errror_message.clone());
+                            installation_results.lock().unwrap().push(errror_message);
                         }
                     }
                     if let Some(installation_result) = installation_result {
@@ -115,21 +118,21 @@ mod windows {
         display_names
     }
 
-    fn install_tool_by_exe(
+    async fn install_tool_by_exe(
         id: &str,
         source: &str,
         post_install: Option<&str>,
         installed_app_display_names: &HashSet<String>,
         set_process_message: impl Fn(&str),
     ) -> Result<InstallStatus> {
-        if is_app_installed(id) {
+        if is_app_installed(id, installed_app_display_names) {
             return Ok(InstallStatus::AlreadyInstalled);
         } else {
             set_process_message("Downloading...");
             let exe_path = download_file(source).await?;
 
             set_process_message("Installing...");
-            let output = run_command_on_windows(&exe_path)?;
+            let output = run_command_on_windows(&exe_path.to_string_lossy())?;
             if !output.status.success() {
                 return Err(anyhow::anyhow!(
                     "Installation failed with output: {}",
@@ -137,7 +140,12 @@ mod windows {
                 ));
             }
 
-            Ok(InstallStatus::Success)
+            if let Some(post_install) = post_install {
+                set_process_message("Running post-install script...");
+                run_command_on_windows(post_install)?;
+            }
+
+            Ok(InstallStatus::Installed)
         }
     }
 

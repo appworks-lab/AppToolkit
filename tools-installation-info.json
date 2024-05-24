@@ -67,20 +67,58 @@
           "type": "shell",
           "id": "fnm",
           "source": "curl -fsSL https://fnm.vercel.app/install | bash",
-          "postInstall": "fnm install latest && fnm default latest"
+          "postInstall": "fnm install 20 && fnm default 20"
         },
         {
           "os": "linux",
           "type": "shell",
           "id": "fnm",
           "source": "curl -fsSL https://fnm.vercel.app/install | bash",
-          "postInstall": "fnm install latest && fnm default latest"
+          "postInstall": "fnm install 20 && fnm default 20"
         },
         {
           "os": "windows",
-          "type": "shell",
+          "type": "zip",
           "id": "fnm",
-          "source": "choco install fnm",
+          "source": "",
+          "postInstall": "fnm install 20 && fnm default 20"
+        }
+      ]
+    },
+    {
+      "name": "Visual Studio Code - Insider",
+      "description": "Visual Studio Code Insider is a code editor redefined and optimized for building and debugging modern web and cloud applications.",
+      "installations": [
+        {
+          "os": "macos",
+          "arch": "x86_64",
+          "type": "zip",
+          "id": "Visual Studio Code - Insiders.app",
+          "source": "https://vscode.download.prss.microsoft.com/dbazure/download/insider/a0986b0f653c8309e8a957d53a0a5039239c6a5d/VSCode-darwin.zip",
+          "postInstall": ""
+        },
+        {
+          "os": "macos",
+          "arch": "aarch64",
+          "type": "zip",
+          "id": "Visual Studio Code - Insiders.app",
+          "source": "https://vscode.download.prss.microsoft.com/dbazure/download/insider/a0986b0f653c8309e8a957d53a0a5039239c6a5d/VSCode-darwin-arm64.zip",
+          "postInstall": ""
+        },
+        {
+          "os": "windows",
+          "arch": "x86_64",
+          "type": "exe",
+          "id": "Microsoft Visual Studio Code Insiders (User)",
+          "source": "https://vscode.download.prss.microsoft.com/dbazure/download/insider/a0986b0f653c8309e8a957d53a0a5039239c6a5d/VSCodeUserSetup-x64-1.90.0-insider.exe",
+          "postInstall": ""
+        },
+        {
+          "os": "linux",
+          "arch": "x86_64",
+          "type": "deb",
+          "id": "",
+          "source": "https://vscode.download.prss.microsoft.com/dbazure/download/insider/a0986b0f653c8309e8a957d53a0a5039239c6a5d/code-insiders_1.90.0-1716506023_amd64.deb",
           "postInstall": ""
         }
       ]

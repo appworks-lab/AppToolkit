@@ -145,7 +145,7 @@ fn handle_installation_finish_message(
         ));
     } else {
         pb.finish_with_message("waiting...");
-        match result.expect("result has error") {
+        match result.expect("installation result has error") {
             InstallStatus::AlreadyInstalled => {
                 installation_results.push(format!(
                     "{} {}: Already installed",
@@ -180,7 +180,7 @@ async fn get_toolkit_config(config_path: &str) -> Result<ToolsInstallationInfo> 
 pub async fn install(config_path: &str) -> Result<()> {
     let tools_installation_info = get_toolkit_config(config_path).await?;
     let filtered_tools_installation_info = filter_install_tools(&tools_installation_info)?;
-    println!("filtered tools_installation_info: {:#?}", filtered_tools_installation_info);
+
     match env::consts::OS {
         "macos" => {
             macos::install(filtered_tools_installation_info).await?;
@@ -190,7 +190,7 @@ pub async fn install(config_path: &str) -> Result<()> {
         }
         "windows" => {
             #[cfg(target_os = "windows")]
-            windows::install(filtered_tools_installation_info).await?;
+            windows::windows::install(filtered_tools_installation_info).await?;
         }
         _ => return Err(anyhow::anyhow!("Unsupported OS {}", std::env::consts::OS)),
     };
@@ -285,10 +285,17 @@ mod test_install_fn_on_macos {
 #[cfg(test)]
 mod test_install_fn_on_windows {
     use super::*;
+    use crate::installation::windows::windows::get_installed_app_display_names;
 
     #[tokio::test]
     async fn test_install_on_windows() -> Result<()> {
         super::install("./tools-installation-info.json").await?;
+
+        let installed_app_display_names = get_installed_app_display_names()?;
+        assert!(installed_app_display_names.contains(&"Microsoft Visual Studio Code (User)".to_string())); 
+        assert!(installed_app_display_names.contains(&"Google Chrome".to_string()));
+        assert!(installed_app_display_names.contains(&"Microsoft Visual Studio Code Insiders (User)".to_string()));
+
         Ok(())
     }
 }

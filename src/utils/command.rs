@@ -50,9 +50,9 @@ pub fn run_command_on_unix(program: &str) -> anyhow::Result<Output> {
     Ok(output)
 }
 
-pub fn run_command_on_windows(program: &str) -> anyhow::Result<Output> {
+pub fn run_command_on_windows<T: AsRef<str>>(program: T) -> anyhow::Result<Output> {
     let output = Command::new("cmd")
-        .args(["/C", program])
+        .args(["/C", program.as_ref()])
         .output()
         .expect("failed to execute process");
     Ok(output)

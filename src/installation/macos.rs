@@ -62,11 +62,13 @@ pub async fn install(tools_installation_info: Vec<ToolInstallationInfo>) -> Resu
                         installation_result = Some(shell_installation_result);
                     }
                     _ => {
-                        pb.finish_with_message(format!(
+                        let errror_message = format!(
                             "Unsupported installation type: {}. App: {}",
                             style(&tool_installation_info.r#type).bold(),
-                            style(&tool_installation_info.name).bold()
-                        ));
+                            style(&tool_installation_info.name).bold(),
+                        );
+                        pb.finish_with_message(errror_message.clone());
+                        installation_results.lock().unwrap().push(errror_message);
                     }
                 }
                 if let Some(installation_result) = installation_result {

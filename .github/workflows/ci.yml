@@ -17,7 +17,7 @@ jobs:
       fail-fast: false
       matrix:
         platform:
-          - os_name: Windows-x86_64
+          - os_name: windows-x86_64
             os: windows-latest
             target: x86_64-pc-windows-msvc
             bin: toolkit.exe
