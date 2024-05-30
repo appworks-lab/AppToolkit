@@ -17,7 +17,10 @@ pub enum Commands {
 
 #[derive(Parser, Debug)]
 pub struct InstallOpts {
-    #[arg(long, default_value = "./tools-installation-info.json")]
+    #[arg(
+        long,
+        default_value = "https://gist.githubusercontent.com/luhc228/6980b3e72e66066c8d27ef7b3f66580b/raw/7cedc802ac732ed1b5af83814dcaaa227f120dfb/toolkit.config.json"
+    )]
     pub config: String,
 }
 

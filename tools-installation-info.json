@@ -1,5 +1,5 @@
 {
-  "$schema": "./toolkit.schema.json",
+  "$schema": "https://gist.githubusercontent.com/luhc228/a71577a3a10688469f0e8e3a44b99cc5/raw/c1fb0541a183adf2d2d54c2f1da8b49a9f81c8e1/toolkit.installation-info.schema.json",
   "tools": [
     {
       "name": "Visual Studio Code",
@@ -25,7 +25,7 @@
           "os": "windows",
           "arch": "x86_64",
           "type": "exe",
-          "id": "Visual Studio Code",
+          "id": "Microsoft Visual Studio Code (User)",
           "source": "https://code.visualstudio.com/sha/download?build=stable&os=win32-x64-user",
           "postInstall": ""
         },
@@ -33,7 +33,7 @@
           "os": "linux",
           "arch": "x86_64",
           "type": "deb",
-          "id": "Visual Studio Code",
+          "id": "",
           "source": "https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64",
           "postInstall": ""
         }
@@ -53,7 +53,7 @@
           "os": "windows",
           "arch": "x86_64",
           "type": "exe",
-          "id": "",
+          "id": "Google Chrome",
           "source": "https://dl.google.com/tag/s/appguid%3D%7B8A69D345-D564-463C-AFF1-A69D9E530F96%7D%26iid%3D%7B92DB07C1-7ED7-8613-94E0-B27FEB01BC15%7D%26lang%3Den%26browser%3D4%26usagestats%3D1%26appname%3DGoogle%2520Chrome%26needsadmin%3Dprefers%26ap%3Dx64-statsdef_1%26installdataindex%3Dempty/update2/installers/ChromeSetup.exe"
         }
       ]
@@ -67,21 +67,21 @@
           "type": "shell",
           "id": "fnm",
           "source": "curl -fsSL https://fnm.vercel.app/install | bash",
-          "postInstall": ""
+          "postInstall": "fnm install 20 && fnm default 20"
         },
         {
           "os": "linux",
           "type": "shell",
           "id": "fnm",
           "source": "curl -fsSL https://fnm.vercel.app/install | bash",
-          "postInstall": ""
+          "postInstall": "fnm install 20 && fnm default 20"
         },
         {
           "os": "windows",
-          "type": "shell",
+          "type": "zip",
           "id": "fnm",
-          "source": "choco install fnm",
-          "postInstall": ""
+          "source": "",
+          "postInstall": "fnm install 20 && fnm default 20"
         }
       ]
     }

@@ -1202,6 +1202,7 @@ dependencies = [
  "serde_json",
  "tokio",
  "walkdir",
+ "winreg",
 ]
 
 [[package]]

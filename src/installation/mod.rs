@@ -1,22 +1,32 @@
 mod linux;
 mod macos;
+mod tools_installation_info;
 mod windows;
 
-use core::fmt;
-use std::path::Path;
-use std::{env, str::FromStr};
-
+use crate::{ERROR_EMOJI, SUCCESS_EMOJI};
 use anyhow::Result;
-use path_absolutize::*;
-use tokio::fs;
-
+use backtrace::Backtrace;
+use console::style;
+use indicatif::ProgressBar;
 use serde::{Deserialize, Serialize};
+use std::{
+    env,
+    fmt::{self, Display},
+    str::FromStr,
+};
+use tools_installation_info::{filter_tools_installation_info, get_tools_installation_info};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct ToolsInstallationInfo {
     pub tools: Vec<Tool>,
     #[serde(rename = "postInstall", default)]
     pub install_type: InstallationType,
+}
+
+impl Display for ToolsInstallationInfo {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "ToolsInstallationInfo: {:?}", self.tools)
+    }
 }
 
 // TODO: support sequential it in the future
@@ -103,6 +113,7 @@ impl fmt::Display for Type {
         }
     }
 }
+#[derive(Debug)]
 pub struct ToolInstallationInfo {
     pub name: String,
     pub description: String,
@@ -114,125 +125,66 @@ pub struct ToolInstallationInfo {
     pub post_install: Option<String>,
 }
 
-async fn get_toolkit_config(config_path: &str) -> Result<ToolsInstallationInfo> {
-    let config = if config_path.starts_with("http") {
-        let config: ToolsInstallationInfo = reqwest::get(config_path).await?.json().await?;
-        config
-    } else {
-        let json = fs::read_to_string(Path::new(config_path).absolutize()?).await?;
-        let config: ToolsInstallationInfo = serde_json::from_str(&json)?;
-        config
-    };
+pub enum InstallStatus {
+    AlreadyInstalled,
+    Installed,
+}
 
-    Ok(config)
+fn handle_installation_finish_message(
+    pb: &ProgressBar,
+    tool_name: &str,
+    result: Result<InstallStatus>,
+    installation_results: &mut Vec<String>,
+) {
+    if let Err(err) = result {
+        let bt = Backtrace::new();
+        pb.finish_with_message("waiting...");
+        eprintln!("Error: {:?}\n Backtrace: {:?}", err, bt);
+        installation_results.push(format!(
+            "{} {}: Failed to install. Reason: {}",
+            ERROR_EMOJI,
+            style(tool_name).bold(),
+            err
+        ));
+    } else {
+        pb.finish_with_message("waiting...");
+        match result.expect("installation result has error") {
+            InstallStatus::AlreadyInstalled => {
+                installation_results.push(format!(
+                    "{} {}: Already installed",
+                    SUCCESS_EMOJI,
+                    style(tool_name).bold()
+                ));
+            }
+            InstallStatus::Installed => {
+                installation_results.push(format!(
+                    "{} {}: Installed Successfully",
+                    SUCCESS_EMOJI,
+                    style(tool_name).bold()
+                ));
+            }
+        }
+    }
 }
 
 pub async fn install(config_path: &str) -> Result<()> {
-    let tools_installation_info = get_toolkit_config(config_path).await?;
-    let final_tools_installation_info = filter_install_tools(&tools_installation_info)?;
+    let tools_installation_info = get_tools_installation_info(config_path).await?;
+    let tools_installation_info = filter_tools_installation_info(&tools_installation_info)?;
+
     match env::consts::OS {
         "macos" => {
-            macos::install(final_tools_installation_info).await?;
+            #[cfg(target_os = "macos")]
+            macos::macos_installation::install(tools_installation_info).await?;
         }
         "linux" => {
             linux::install().await?;
         }
         "windows" => {
-            windows::install().await?;
+            #[cfg(target_os = "windows")]
+            windows::windows_installation::install(tools_installation_info).await?;
         }
         _ => return Err(anyhow::anyhow!("Unsupported OS {}", std::env::consts::OS)),
     };
 
     Ok(())
 }
-
-fn filter_install_tools(tools_installation_info: &ToolsInstallationInfo) -> Result<Vec<ToolInstallationInfo>> {
-    let cur_arch: &str = env::consts::ARCH;
-    let cur_os = env::consts::OS;
-
-    let mut final_tools_installation_info: Vec<ToolInstallationInfo> = vec![];
-
-    tools_installation_info.tools.iter().for_each(|tool| {
-        tool.installations.iter().for_each(|installation| {
-            let tool_installation_info = ToolInstallationInfo {
-                name: tool.name.clone(),
-                description: tool.description.clone(),
-                os: installation.os,
-                arch: installation.arch,
-                id: installation.id.clone(),
-                r#type: installation.r#type,
-                source: installation.source.clone(),
-                post_install: installation.post_install.clone(),
-            };
-            let is_os_matched =
-                installation.os == OS::from_str(cur_os).expect("failed to convert `std::env::consts::OS` to OS enum");
-            if let Some(arch) = &installation.arch {
-                if is_os_matched
-                    && *arch
-                        == Arch::from_str(cur_arch).expect("failed to convert `std::env::consts::ARCH` to Arch enum")
-                {
-                    final_tools_installation_info.push(tool_installation_info);
-                }
-            } else if is_os_matched {
-                final_tools_installation_info.push(tool_installation_info);
-            }
-        })
-    });
-
-    Ok(final_tools_installation_info)
-}
-
-#[cfg(test)]
-mod test_get_toolkit_config_fn {
-    use super::*;
-
-    #[tokio::test]
-    async fn test_get_config_with_local_file() -> Result<()> {
-        let config = get_toolkit_config("./tools-installation-info.json").await?;
-        assert!(config.tools.len() == 3);
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn test_get_config_with_remote_file() -> Result<()> {
-        let config = get_toolkit_config("https://gist.githubusercontent.com/luhc228/6980b3e72e66066c8d27ef7b3f66580b/raw/a47a3c0b68b5fedf62cd0f7a43c0bc2c224d4d60/toolkit.config.json").await?;
-        assert!(config.tools.len() == 3);
-        Ok(())
-    }
-}
-
-#[cfg(test)]
-mod test_install_fn_on_macos {
-    use super::*;
-
-    use crate::run_command_on_unix;
-
-    #[cfg(target_os = "macos")]
-    #[tokio::test]
-    async fn test_install_on_mac() -> Result<()> {
-        install("./tools-installation-info.json").await?;
-        check_path_existence("/Applications/Google Chrome.app")?;
-        check_path_existence("/Applications/Visual Studio Code.app")?;
-        check_script_existence("which fnm")?;
-        Ok(())
-    }
-
-    fn check_script_existence(command: &str) -> Result<()> {
-        let output = run_command_on_unix(command)?;
-        assert_eq!(output.status.code(), Some(0), "Command {:?} not found", command);
-        Ok(())
-    }
-    fn check_path_existence(path: &str) -> Result<()> {
-        let path = Path::new(path);
-        assert!(path.exists(), "Path {:?} does not exist", path);
-        Ok(())
-    }
-}
-
-#[cfg(target_os = "windows")]
-#[cfg(test)]
-mod test_install_fn_on_windows {}
-
-#[cfg(target_os = "linux")]
-#[cfg(test)]
-mod test_install_fn_on_linux {}
