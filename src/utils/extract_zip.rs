@@ -22,7 +22,10 @@ mod tests {
         let extract_path = "tmp/extract_zip_test";
         fs::create_dir_all(extract_path)?;
 
-        let zip_path = download_file("https://vscode.download.prss.microsoft.com/dbazure/download/insider/5f78b58b57b7cf84d28d801fed6bb4a48f908601/VSCode-darwin-arm64.zip").await?;
+        let zip_path = download_file(
+            "https://vscode.download.prss.microsoft.com/dbazure/download/insider/5f78b58b57b7cf84d28d801fed6bb4a48f908601/VSCode-darwin-arm64.zip",
+            |_| {},
+        ).await?;
         extract_zip(&zip_path, extract_path)?;
 
         assert!(Path::new(extract_path).exists());

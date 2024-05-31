@@ -110,7 +110,7 @@ pub mod macos_installation {
             Ok(InstallStatus::AlreadyInstalled)
         } else {
             set_process_message("Downloading...");
-            let zip_path = download_file(source).await?;
+            let zip_path = download_file(source, &set_process_message).await?;
             set_process_message("Extracting zip to `/Applications` directory...");
             extract_zip(&zip_path, "/Applications")?;
             if let Some(post_install) = post_install {
@@ -135,7 +135,7 @@ pub mod macos_installation {
             Ok(InstallStatus::AlreadyInstalled)
         } else {
             set_process_message("Downloading...");
-            let dmg_path = download_file(source).await?;
+            let dmg_path = download_file(source, &set_process_message).await?;
 
             install_dmg(id, &dmg_path, &set_process_message)?;
 

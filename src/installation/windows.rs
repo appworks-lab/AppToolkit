@@ -7,7 +7,6 @@ pub mod windows_installation {
         sync::{Arc, Mutex},
         time::Duration,
     };
-
     use anyhow::Result;
     use console::style;
     use indicatif::{MultiProgress, ProgressBar};
@@ -158,7 +157,7 @@ pub mod windows_installation {
             return Ok(InstallStatus::AlreadyInstalled);
         } else {
             set_process_message("Downloading...");
-            let exe_path = download_file(source).await?;
+            let exe_path = download_file(source, &set_process_message).await?;
 
             set_process_message("Installing...");
             let output = run_command_on_windows(&exe_path.to_string_lossy())?;

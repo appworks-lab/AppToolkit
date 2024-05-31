@@ -1,11 +1,17 @@
 use anyhow::Result;
-use std::env;
-use std::path::PathBuf;
-use tokio::fs::File;
-use tokio::io::AsyncWriteExt;
+use reqwest::Client;
+use std::{cmp::min, env, path::PathBuf, fs::File, io::Write};
+use futures_util::StreamExt;
 
-pub async fn download_file(url: &str) -> Result<PathBuf> {
-    let response = reqwest::get(url).await?;
+pub async fn download_file(url: &str, set_process_message: impl Fn(&str)) -> Result<PathBuf> {
+    let client = Client::new();
+    let response = client.get(url)
+      .send()
+      .await
+      .map_err(|err| anyhow::anyhow!("Failed to GET from '{}'. Error: {}", url, err))?;
+    let total_size = response
+      .content_length()
+      .ok_or(anyhow::anyhow!("Failed to get content length from '{}'", &url))?;
     let file_path = response
         .url()
         .path_segments()
@@ -14,10 +20,24 @@ pub async fn download_file(url: &str) -> Result<PathBuf> {
             let mut path = env::temp_dir();
             path.push(name);
             path
-        });
-    let file_path = file_path.expect("Failed to create file");
-    let mut out = File::create(&file_path).await?;
-    let bytes = response.bytes().await?;
-    out.write_all(&bytes).await?;
+        }).ok_or(anyhow::anyhow!("Failed to get file name from url '{}'", url))?;
+    let mut file = File::create(&file_path)?;
+
+    let mut downloaded: u64 = 0;
+    let mut stream = response.bytes_stream();
+
+    while let Some(item) = stream.next().await {
+      let chunk = item.map_err(|err| anyhow::anyhow!("Failed to get next item from stream. Error: {}", err))?;
+      file.write_all(&chunk).map_err(|err| anyhow::anyhow!("Failed to write to file '{:?}'. Error: {}", &file_path, err))?;
+      let new = min(downloaded + (chunk.len() as u64), total_size);
+      downloaded = new;
+
+      set_process_message(
+        &format!("Downloaded: {:.1} MB / {:.1} MB ({:.1}%)", downloaded as f64 / 1024.0 / 1024.0, total_size as f64 / 1024.0 / 1024.0, 100_f64 * (downloaded as f64 / total_size as f64))
+      );
+    }
+
+    set_process_message(&format!("Downloaded {} to {:?}", url, &file_path));
+
     Ok(file_path)
 }
