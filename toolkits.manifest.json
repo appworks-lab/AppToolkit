@@ -58,22 +58,29 @@
       ]
     },
     {
-      "name": "fnm",
-      "description": "Fast and simple Node.js version manager, built in Rust",
+      "name": "nvm",
+      "description": "Node Version Manager - POSIX-compliant bash script to manage multiple active node.js versions",
       "installations": [
         {
           "os": "macos",
           "type": "shell",
-          "id": "fnm",
-          "source": "curl -fsSL https://fnm.vercel.app/install | bash",
-          "postInstall": "fnm install 20 && fnm default 20"
+          "id": "nvm",
+          "source": "curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash",
+          "postInstall": "nvm install node && nvm alias default node"
         },
         {
           "os": "linux",
           "type": "shell",
-          "id": "fnm",
-          "source": "curl -fsSL https://fnm.vercel.app/install | bash",
-          "postInstall": "fnm install 20 && fnm default 20"
+          "id": "nvm",
+          "source": "curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash",
+          "postInstall": "nvm install node && nvm alias default node"
+        },
+        {
+          "os": "windows",
+          "type": "exe",
+          "id": "nvm",
+          "source": "https://github.com/coreybutler/nvm-windows/releases/download/1.1.12/nvm-setup.exe",
+          "postInstall": "nvm install node && nvm use node"
         }
       ]
     }
