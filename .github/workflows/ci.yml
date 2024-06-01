@@ -38,14 +38,6 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           key: "v2"
-      - name: Build binary
-        uses: houseabsolute/actions-rust-cross@v0
-        with:
-          command: "build"
-          target: ${{ matrix.platform.target }}
-          toolchain: ${{ matrix.toolchain }}
-          args: "--locked --release"
-          strip: true
       - name: Run tests
         uses: houseabsolute/actions-rust-cross@v0
         with:
@@ -54,29 +46,38 @@ jobs:
           toolchain: ${{ matrix.toolchain }}
           args: "--locked --release"
         if: ${{ !matrix.platform.skip_tests }}
+      - name: Build binary
+        uses: houseabsolute/actions-rust-cross@v0
+        with:
+          command: "build"
+          target: ${{ matrix.platform.target }}
+          toolchain: ${{ matrix.toolchain }}
+          args: "--locked --release"
+          strip: true
+        if: (startsWith(github.ref, 'refs/tags/cli-v') || github.ref == 'refs/heads/test-release')
       - name: Move binary to bin directory
         run: |
           mkdir -p bin
           move target/${{ matrix.platform.target }}/release/${{ matrix.platform.bin }} bin/${{ matrix.platform.os_name }}-${{ matrix.platform.bin }}
-        if: matrix.platform.os == 'windows-latest' && matrix.toolchain == 'stable' && (startsWith(github.ref, 'refs/tags/cli-v') || github.ref == 'refs/heads/test-release')
+        if: matrix.platform.os == 'windows-latest' && (startsWith(github.ref, 'refs/tags/cli-v') || github.ref == 'refs/heads/test-release')
       - name: Move binary to bin directory
         run: |
           mkdir -p bin
           mv target/${{ matrix.platform.target }}/release/${{ matrix.platform.bin }} bin/${{ matrix.platform.os_name }}-${{ matrix.platform.bin }}
-        if: matrix.platform.os != 'windows-latest' && matrix.toolchain == 'stable' && (startsWith(github.ref, 'refs/tags/cli-v') || github.ref == 'refs/heads/test-release')
+        if: matrix.platform.os != 'windows-latest' && (startsWith(github.ref, 'refs/tags/cli-v') || github.ref == 'refs/heads/test-release')
       - name: Publish release binary
         uses: actions/upload-artifact@v4
         with:
           name: toolkit-${{ matrix.platform.os_name }}
           path: bin/${{ matrix.platform.os_name }}-${{ matrix.platform.bin }}
-        if: matrix.toolchain == 'stable' && (startsWith(github.ref, 'refs/tags/cli-v') || github.ref == 'refs/heads/test-release')
+        if: (startsWith(github.ref, 'refs/tags/cli-v') || github.ref == 'refs/heads/test-release')
       - name: Generate SHA-256
         run: shasum -a 256 bin/${{ matrix.platform.os_name }}-${{ matrix.platform.bin }} > bin/${{ matrix.platform.os_name }}-${{ matrix.platform.bin }}.sha256
-        if: matrix.toolchain == 'stable' && startsWith(matrix.platform.os, 'macOS') && (startsWith(github.ref, 'refs/tags/cli-v') || github.ref == 'refs/heads/test-release')
+        if: startsWith(matrix.platform.os, 'macOS') && (startsWith(github.ref, 'refs/tags/cli-v') || github.ref == 'refs/heads/test-release')
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v2
         with:
           draft: true
           files: "bin/*"
           body_path: CHANGELOG.md
-        if: matrix.toolchain == 'stable' && (startsWith(github.ref, 'refs/tags/cli-v') || github.ref == 'refs/heads/test-release')
+        if: (startsWith(github.ref, 'refs/tags/cli-v') || github.ref == 'refs/heads/test-release')

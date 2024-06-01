@@ -65,14 +65,14 @@
           "os": "macos",
           "type": "shell",
           "id": "fnm",
-          "source": "curl -fsSL https://github.com/Schniz/fnm/blob/master/.ci/install.sh | bash",
+          "source": "curl -fsSL https://raw.githubusercontent.com/Schniz/fnm/master/.ci/install.sh | bash",
           "postInstall": "fnm install 22 && fnm default 22"
         },
         {
           "os": "linux",
           "type": "shell",
           "id": "fnm",
-          "source": "curl -fsSL https://github.com/Schniz/fnm/blob/master/.ci/install.sh | bash",
+          "source": "curl -fsSL https://raw.githubusercontent.com/Schniz/fnm/master/.ci/install.sh | bash",
           "postInstall": "fnm install 22 && fnm default 22"
         }
       ]
