@@ -1,5 +1,6 @@
 use anyhow::Result;
 use futures_util::StreamExt;
+use regex::Regex;
 use reqwest::{Client, Response};
 use std::{cmp::min, env, fs::File, io::Write, path::PathBuf};
 
@@ -49,11 +50,19 @@ fn get_file_name_from_response(response: &Response) -> Result<String> {
         .ok_or(anyhow::anyhow!("Failed to get content-disposition header"))?
         .to_str()
         .map_err(|err| anyhow::anyhow!("Failed to convert content-disposition header to string. Error: {}", err))?;
-    let file_name = content_disposition
-        .split("filename=")
-        .nth(1)
-        .ok_or(anyhow::anyhow!("Failed to get file name from content-disposition header"))?
-        .replace("\"", "");
-    Ok(file_name)
+    let re =
+        Regex::new(r"filename=([^;]+)").map_err(|err| anyhow::anyhow!("Failed to create regex. Error: {}", err))?;
+    let file_name = re
+        .captures(content_disposition)
+        .ok_or(anyhow::anyhow!(
+            "Failed to get file name from content-disposition header"
+        ))?
+        .get(1)
+        .ok_or(anyhow::anyhow!(
+            "Failed to get file name from content-disposition header"
+        ))?
+        .as_str()
+        .replace('"', "");
 
+    Ok(file_name)
 }
