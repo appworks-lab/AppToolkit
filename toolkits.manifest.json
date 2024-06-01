@@ -58,23 +58,29 @@
       ]
     },
     {
-      "name": "nvm",
-      "description": "Node Version Manager - POSIX-compliant bash script to manage multiple active node.js versions",
+      "name": "fnm",
+      "description": "Fast Node Manager - Fast and simple Node.js version manager, built in Rust",
       "installations": [
         {
           "os": "macos",
           "type": "shell",
-          "id": "nvm",
-          "source": "curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash",
-          "postInstall": "nvm install lts && nvm alias default node"
+          "id": "fnm",
+          "source": "curl -fsSL https://github.com/Schniz/fnm/blob/master/.ci/install.sh | bash",
+          "postInstall": "fnm install 22 && fnm default 22"
         },
         {
           "os": "linux",
           "type": "shell",
-          "id": "nvm",
-          "source": "curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash",
-          "postInstall": "nvm install lts && nvm alias default node"
-        },
+          "id": "fnm",
+          "source": "curl -fsSL https://github.com/Schniz/fnm/blob/master/.ci/install.sh | bash",
+          "postInstall": "fnm install 22 && fnm default 22"
+        }
+      ]
+    },
+    {
+      "name": "nvm",
+      "description": "Node Version Manager - POSIX-compliant bash script to manage multiple active node.js versions",
+      "installations": [
         {
           "os": "windows",
           "type": "exe",
