@@ -25,6 +25,8 @@ $ toolkit.exe install
 $ toolkit.exe install --manifest <your-manifest-path>
 ```
 
+**NOTE: Currently, you may need to follow the installtion instructions to install tools manually on Windows system.**
+
 #### Macos & Linux
 
 ```shell
@@ -36,7 +38,7 @@ $ toolkit install --manifest <your-manifest-path>
 
 ## Customization
 
-You can customize your tools list by creating a json file. Here we provide a [json schema](https://raw.githubusercontent.com/apptools-lab/AppToolkit/feat/cli/toolkits.schema.json) for you to follow and you can get the hint in some IDE just like Visual Studio Code.
+You can customize your tools which to be installed in a json file. Here we provide a [json schema](https://raw.githubusercontent.com/apptools-lab/AppToolkit/feat/cli/toolkits.schema.json) for you to follow and you can get the hint in the popular IDEs like Visual Studio Code, IntelliJ and so on. For Example: 
 
 ```json
 {
@@ -58,9 +60,24 @@ You can customize your tools list by creating a json file. Here we provide a [js
 }
 ```
 
+Now AppToolkit supports the following types of tool:
+
+- Windows
+  - [x] exe
+- MacOS
+  - [x] dmg
+  - [x] zip
+  - [x] shell
+- Linux
+  - [ ] deb
+  - [ ] rpm
+  - [ ] shell
+
+If you want to support more types of tools, you can submit a PR or issue to us.
+
 You can see [tookits.manifest.json](https://raw.githubusercontent.com/apptools-lab/AppToolkit/feat/cli/toolkits.manifest.json) for reference.
 
-After completion, you can save your tools list in a json file locally or upload to the remote server(GitHub repo or other cloud storage). You can share your toolkit manifest with your team members or friends.
+After completion, you can save your toolkit schema in a json file locally or upload it to the remote server(GitHub repo or cloud storage). You can share your toolkit manifest with your team members or friends.
 
 Then you can install your custom tools with the following command:
 
