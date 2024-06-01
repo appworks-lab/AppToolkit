@@ -5,7 +5,9 @@ Toolkit is a CLI that helps you to initialize your development env faster.
 ## Features
 
 🌎 Cross-platform support (macOS, Windows, Linux)
+
 ✨ Custom your tools list and install them with one command
+
 🚀 Built with rust and install tools in parallel
 
 ## Quick Start
@@ -38,7 +40,7 @@ $ toolkit install --manifest <your-manifest-path>
 
 ## Customization
 
-You can customize your tools which to be installed in a json file. Here we provide a [json schema](https://raw.githubusercontent.com/apptools-lab/AppToolkit/feat/cli/toolkits.schema.json) for you to follow and you can get the hint in the popular IDEs like Visual Studio Code, IntelliJ and so on. For Example: 
+You can customize your tools which to be installed in a json file. Here we provide a [json schema](https://raw.githubusercontent.com/apptools-lab/AppToolkit/feat/cli/toolkits.schema.json) for you to follow and you can get the hint in the popular IDEs like Visual Studio Code, IntelliJ and so on. For Example:
 
 ```json
 {
