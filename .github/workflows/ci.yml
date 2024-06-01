@@ -21,16 +21,19 @@ jobs:
             os: windows-latest
             target: x86_64-pc-windows-msvc
             bin: toolkit.exe
+            name: toolkit-Windows-x86_64.zip
           - os_name: macOS-x86_64
             # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners/about-github-hosted-runners#standard-github-hosted-runners-for-public-repositories
             os: macos-13
             target: x86_64-apple-darwin
             bin: toolkit
+            name: toolkit-macOS-x86_64.zip
           - os_name: macOS-aarch64
             os: macos-latest
             target: aarch64-apple-darwin
-            skip_tests: true
             bin: toolkit
+            name: toolkit-macOS-aarch64.zip
+            skip_tests: true
         toolchain: [stable]
     steps:
       - uses: actions/checkout@v4
@@ -55,21 +58,23 @@ jobs:
           args: "--locked --release"
           strip: true
         if: (startsWith(github.ref, 'refs/tags/cli-v') || github.ref == 'refs/heads/test-release')
+        # Windows
       - name: Move binary to bin directory
         run: |
-          mkdir -p bin
-          move target/${{ matrix.platform.target }}/release/${{ matrix.platform.bin }} bin/${{ matrix.platform.os_name }}-${{ matrix.platform.bin }}
+          cd target/${{ matrix.platform.target }}/release
+          7z a ../../../${{ matrix.platform.name }} ${{ matrix.platform.bin }}
         if: matrix.platform.os == 'windows-latest' && (startsWith(github.ref, 'refs/tags/cli-v') || github.ref == 'refs/heads/test-release')
+        # Macos & Linux
       - name: Move binary to bin directory
         run: |
-          mkdir -p bin
-          mv target/${{ matrix.platform.target }}/release/${{ matrix.platform.bin }} bin/${{ matrix.platform.os_name }}-${{ matrix.platform.bin }}
+          cd target/${{ matrix.platform.target }}/release
+          zip ../../../${{ matrix.platform.name }} ${{ matrix.platform.bin }}
         if: matrix.platform.os != 'windows-latest' && (startsWith(github.ref, 'refs/tags/cli-v') || github.ref == 'refs/heads/test-release')
       - name: Publish release binary
         uses: actions/upload-artifact@v4
         with:
           name: toolkit-${{ matrix.platform.os_name }}
-          path: bin/${{ matrix.platform.os_name }}-${{ matrix.platform.bin }}
+          path: toolkit-*
         if: (startsWith(github.ref, 'refs/tags/cli-v') || github.ref == 'refs/heads/test-release')
       - name: Generate SHA-256
         run: shasum -a 256 bin/${{ matrix.platform.os_name }}-${{ matrix.platform.bin }} > bin/${{ matrix.platform.os_name }}-${{ matrix.platform.bin }}.sha256
@@ -78,6 +83,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           draft: true
-          files: "bin/*"
+          files: "toolkit-*"
           body_path: CHANGELOG.md
         if: (startsWith(github.ref, 'refs/tags/cli-v') || github.ref == 'refs/heads/test-release')
