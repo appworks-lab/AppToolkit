@@ -76,9 +76,6 @@ jobs:
           name: toolkit-${{ matrix.platform.os_name }}
           path: toolkit-*
         if: (startsWith(github.ref, 'refs/tags/cli-v') || github.ref == 'refs/heads/test-release')
-      - name: Generate SHA-256
-        run: shasum -a 256 bin/${{ matrix.platform.os_name }}-${{ matrix.platform.bin }} > bin/${{ matrix.platform.os_name }}-${{ matrix.platform.bin }}.sha256
-        if: startsWith(matrix.platform.os, 'macOS') && (startsWith(github.ref, 'refs/tags/cli-v') || github.ref == 'refs/heads/test-release')
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v2
         with:
