@@ -243,7 +243,7 @@ mod test_install_fn {
         install(filtered_tools_installation_detail).await?;
         check_path_existence("/Applications/Google Chrome.app")?;
         check_path_existence("/Applications/Visual Studio Code.app")?;
-        check_script_existence("which fnm")?;
+        check_script_existence("which nvm")?;
         check_script_existence("which node")?;
 
         Ok(())
