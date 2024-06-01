@@ -66,21 +66,21 @@
           "type": "shell",
           "id": "nvm",
           "source": "curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash",
-          "postInstall": "nvm install node && nvm alias default node"
+          "postInstall": "nvm install lts && nvm alias default node"
         },
         {
           "os": "linux",
           "type": "shell",
           "id": "nvm",
           "source": "curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash",
-          "postInstall": "nvm install node && nvm alias default node"
+          "postInstall": "nvm install lts && nvm alias default node"
         },
         {
           "os": "windows",
           "type": "exe",
           "id": "nvm",
           "source": "https://github.com/coreybutler/nvm-windows/releases/download/1.1.12/nvm-setup.exe",
-          "postInstall": "nvm install node && nvm use node"
+          "postInstall": "nvm install lts && nvm use node"
         }
       ]
     }

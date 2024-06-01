@@ -14,7 +14,7 @@ pub mod windows_installation {
 
     use crate::{
         download_file, installation::handle_installation_finish_message, run_command_on_windows, InstallStatus,
-        InstallationDetailItem, ToolInstallationManifest, Type, SPINNER_STYLE,
+        InstallationDetailItem, Type, SPINNER_STYLE,
     };
 
     pub async fn install(tools_installation_detail: Vec<InstallationDetailItem>) -> Result<()> {
