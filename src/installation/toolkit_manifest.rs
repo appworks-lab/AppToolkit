@@ -63,7 +63,7 @@ mod test_get_tookits_manifest {
     #[tokio::test]
     async fn test_with_local_file() -> Result<()> {
         let toolkits_manifest = get_tookits_manifest("./toolkits.manifest.json").await?;
-        assert!(toolkits_manifest.tools.len() == 3);
+        assert!(toolkits_manifest.tools.len() == 4);
         Ok(())
     }
 
@@ -73,7 +73,7 @@ mod test_get_tookits_manifest {
             "https://raw.githubusercontent.com/apptools-lab/AppToolkit/feat/cli/toolkits.manifest.json",
         )
         .await?;
-        assert!(toolkits_manifest.tools.len() == 3);
+        assert!(toolkits_manifest.tools.len() == 4);
         Ok(())
     }
 }
