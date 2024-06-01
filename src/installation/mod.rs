@@ -26,7 +26,11 @@ pub struct ToolkitsManifest {
 
 impl Display for ToolkitsManifest {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, " author: {}, version: {}, description: {}, tools: {:?}", self.author, self.version, self.description, self.tools)
+        write!(
+            f,
+            " author: {}, version: {}, description: {}, tools: {:?}",
+            self.author, self.version, self.description, self.tools
+        )
     }
 }
 
@@ -164,10 +168,8 @@ pub async fn install(manifest_path: &str) -> Result<()> {
     let tools_installation_detail = filter_tool_installation_detail(&toolkits_manifest.tools)?;
 
     println!(
-    "Using Toolkits Manifest:\n  Path:    {}\n  Version: {}\n  Author:  {}\n",
-        manifest_path,
-        toolkits_manifest.version, 
-        toolkits_manifest.author
+        "Using Toolkits Manifest:\n  Path:    {}\n  Version: {}\n  Author:  {}\n",
+        manifest_path, toolkits_manifest.version, toolkits_manifest.author
     );
 
     match env::consts::OS {

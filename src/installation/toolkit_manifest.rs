@@ -19,7 +19,7 @@ pub async fn get_tookits_manifest(manifest_path: &str) -> Result<ToolkitsManifes
 }
 // filter the tools based on the current OS and Arch
 pub fn filter_tool_installation_detail(
-    tools_installation_manifest: &Vec<ToolInstallationManifest>,
+    tools_installation_manifest: &[ToolInstallationManifest],
 ) -> Result<Vec<InstallationDetailItem>> {
     let cur_arch: &str = env::consts::ARCH;
     let cur_os = env::consts::OS;
@@ -55,7 +55,6 @@ pub fn filter_tool_installation_detail(
 
     Ok(filtered_tools_installation_detail)
 }
-
 
 #[cfg(test)]
 mod test_get_tookits_manifest {

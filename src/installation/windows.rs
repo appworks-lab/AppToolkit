@@ -2,19 +2,19 @@
 pub mod windows_installation {
     extern crate winreg;
 
+    use anyhow::Result;
+    use console::style;
+    use indicatif::{MultiProgress, ProgressBar};
     use std::{
         collections::HashSet,
         sync::{Arc, Mutex},
         time::Duration,
     };
-    use anyhow::Result;
-    use console::style;
-    use indicatif::{MultiProgress, ProgressBar};
     use winreg::{enums::*, RegKey, HKEY};
 
     use crate::{
         download_file, installation::handle_installation_finish_message, run_command_on_windows, InstallStatus,
-        ToolInstallationManifest, Type, SPINNER_STYLE, InstallationDetailItem
+        InstallationDetailItem, ToolInstallationManifest, Type, SPINNER_STYLE,
     };
 
     pub async fn install(tools_installation_detail: Vec<InstallationDetailItem>) -> Result<()> {

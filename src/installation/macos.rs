@@ -7,7 +7,12 @@ pub mod macos_installation {
     use anyhow::Result;
     use console::style;
     use indicatif::{MultiProgress, ProgressBar};
-    use std::{clone::Clone, path::{Path, PathBuf}, sync::{Arc, Mutex}, time::Duration};
+    use std::{
+        clone::Clone,
+        path::{Path, PathBuf},
+        sync::{Arc, Mutex},
+        time::Duration,
+    };
     use tokio::fs;
     use walkdir::WalkDir;
 
