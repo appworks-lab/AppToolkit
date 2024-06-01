@@ -8,7 +8,7 @@ async fn main() -> anyhow::Result<()> {
     match cli.command {
         Some(command) => match command {
             Commands::Install(opts) => {
-                install(&opts.config).await?;
+                install(&opts.manifest).await?;
             }
             Commands::GitSSH(opts) => {
                 println!("GitSSH: {:?}", opts);

@@ -10,24 +10,22 @@ pub mod windows_installation {
     use anyhow::Result;
     use console::style;
     use indicatif::{MultiProgress, ProgressBar};
-    use winreg::enums::*;
-    use winreg::RegKey;
-    use winreg::HKEY;
+    use winreg::{enums::*, RegKey, HKEY};
 
     use crate::{
         download_file, installation::handle_installation_finish_message, run_command_on_windows, InstallStatus,
-        ToolInstallationInfo, Type, SPINNER_STYLE,
+        ToolInstallationManifest, Type, SPINNER_STYLE, InstallationDetailItem
     };
 
-    pub async fn install(tools_installation_info: Vec<ToolInstallationInfo>) -> Result<()> {
+    pub async fn install(tools_installation_detail: Vec<InstallationDetailItem>) -> Result<()> {
         let multi_progress = MultiProgress::new();
-        let tools_count = tools_installation_info.len();
+        let tools_count = tools_installation_detail.len();
 
         let installation_results: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(Vec::with_capacity(tools_count)));
 
         let installed_app_display_names = get_installed_app_display_names()?;
 
-        let handles = tools_installation_info
+        let handles = tools_installation_detail
             .into_iter()
             .enumerate()
             .map(|(index, tool_installation_info)| {

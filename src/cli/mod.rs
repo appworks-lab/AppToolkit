@@ -9,7 +9,7 @@ pub struct Cli {
 
 #[derive(Subcommand, Debug)]
 pub enum Commands {
-    #[command(name = "install", about = "Install packages or apps.")]
+    #[command(name = "install", about = "Install toolkits.")]
     Install(InstallOpts),
     #[command(name = "git-ssh", about = "Generate Git SSH secret key")]
     GitSSH(GitSSHOpts),
@@ -19,9 +19,10 @@ pub enum Commands {
 pub struct InstallOpts {
     #[arg(
         long,
-        default_value = "https://gist.githubusercontent.com/luhc228/6980b3e72e66066c8d27ef7b3f66580b/raw/7cedc802ac732ed1b5af83814dcaaa227f120dfb/toolkit.config.json"
+        default_value = "./toolkits.manifest.json",
+        help = "Path to the toolkits manifest file. You can pass a URL to a remote manifest file or a file path to a local manifest file."
     )]
-    pub config: String,
+    pub manifest: String,
 }
 
 #[derive(Parser, Debug)]

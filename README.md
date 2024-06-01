@@ -19,51 +19,55 @@ You can download the toolkit CLI from the [release page](https://github.com/appt
 #### Windows
 
 ```shell
-# Install the recommended tools
+# Install the recommended toolkits(for web development)
 $ toolkit.exe install
-# Install your custom tools
-$ toolkit.exe install --config <your-config-path>
+# Install your toolkits
+$ toolkit.exe install --manifest <your-manifest-path>
 ```
 
 #### Macos & Linux
 
 ```shell
-# Install the recommended tools
+# Install the recommended toolkits(for web development)
 $ toolkit install
-# Install your custom tools
-$ toolkit install --config <your-config-path>
+# Install your toolkits
+$ toolkit install --manifest <your-manifest-path>
 ```
 
 ## Customization
 
-You can customize your tools list by creating a json file. Here we provide a [json schema](https://gist.githubusercontent.com/luhc228/a71577a3a10688469f0e8e3a44b99cc5/raw/c1fb0541a183adf2d2d54c2f1da8b49a9f81c8e1/toolkit.installation-info.schema.json) for you to follow and you can get the hint in some IDE just like Visual Studio Code.
+You can customize your tools list by creating a json file. Here we provide a [json schema](https://raw.githubusercontent.com/apptools-lab/AppToolkit/feat/cli/toolkits.schema.json) for you to follow and you can get the hint in some IDE just like Visual Studio Code.
 
 ```json
 {
-   "$schema": "https://gist.githubusercontent.com/luhc228/a71577a3a10688469f0e8e3a44b99cc5/raw/c1fb0541a183adf2d2d54c2f1da8b49a9f81c8e1/toolkit.installation-info.schema.json",
-   "tools": [
+  "$schema": "https://raw.githubusercontent.com/apptools-lab/AppToolkit/feat/cli/toolkits.schema.json",
+  "description": "<your toolkits schema description>",
+  "author": "<your name or email>",
+  "version": "<toolkits manifest version>",
+  "tools": [
+    {
+      "name": "Visual Studio Code",
+      "description": "<vscode description>",
+      "installations": [
         {
-            "name": "Visual Studio Code",
-            "description": "<description>",
-            "installations": [
-                {
-                    ...
-                }
-            ]
+            ...
         }
-   ],
-   "installType": "parallel"
+      ]
+    }
+  ]
 }
 ```
 
-After completion, you can save your tools list in a json file locally or upload to the remote server(GitHub Gist or other cloud storage). You can share your tools list with your team members or friends.
+You can see [tookits.manifest.json](https://raw.githubusercontent.com/apptools-lab/AppToolkit/feat/cli/toolkits.manifest.json) for reference.
+
+After completion, you can save your tools list in a json file locally or upload to the remote server(GitHub repo or other cloud storage). You can share your toolkit manifest with your team members or friends.
 
 Then you can install your custom tools with the following command:
 
 ```shell
 # windows
-$ toolkit.exe install --config <your-config-path>
+$ toolkit.exe install --manifest <your-manifest-path>
 
 # macos & linux
-$ toolkit install --config <your-config-path>
+$ toolkit install --manifest <your-manifest-path>
 ```

@@ -1,6 +1,6 @@
 mod linux;
 mod macos;
-mod tools_installation_info;
+mod toolkit_manifest;
 mod windows;
 
 use crate::{ERROR_EMOJI, SUCCESS_EMOJI};
@@ -14,39 +14,31 @@ use std::{
     fmt::{self, Display},
     str::FromStr,
 };
-use tools_installation_info::{filter_tools_installation_info, get_tools_installation_info};
+use toolkit_manifest::{filter_tool_installation_detail, get_tookits_manifest};
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct ToolsInstallationInfo {
-    pub tools: Vec<Tool>,
-    #[serde(rename = "postInstall", default)]
-    pub install_type: InstallationType,
+pub struct ToolkitsManifest {
+    pub author: String,
+    pub version: String,
+    pub description: String,
+    pub tools: Vec<ToolInstallationManifest>,
 }
 
-impl Display for ToolsInstallationInfo {
+impl Display for ToolkitsManifest {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "ToolsInstallationInfo: {:?}", self.tools)
+        write!(f, " author: {}, version: {}, description: {}, tools: {:?}", self.author, self.version, self.description, self.tools)
     }
 }
 
-// TODO: support sequential it in the future
-#[derive(Debug, Deserialize, Serialize, Default)]
-#[serde(rename_all = "lowercase")]
-pub enum InstallationType {
-    #[default]
-    Parallel,
-    Sequential,
-}
-
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Tool {
+pub struct ToolInstallationManifest {
     pub name: String,
     pub description: String,
-    pub installations: Vec<Installation>,
+    pub installations: Vec<RawInstallationDetailItem>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Installation {
+pub struct RawInstallationDetailItem {
     os: OS,
     arch: Option<Arch>,
     id: String,
@@ -54,6 +46,17 @@ pub struct Installation {
     source: String,
     #[serde(rename = "postInstall", default)]
     post_install: Option<String>,
+}
+#[derive(Debug)]
+pub struct InstallationDetailItem {
+    pub name: String,
+    pub description: String,
+    pub os: OS,
+    pub arch: Option<Arch>,
+    pub id: String,
+    pub r#type: Type,
+    pub source: String,
+    pub post_install: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Copy, Clone)]
@@ -113,17 +116,6 @@ impl fmt::Display for Type {
         }
     }
 }
-#[derive(Debug)]
-pub struct ToolInstallationInfo {
-    pub name: String,
-    pub description: String,
-    pub os: OS,
-    pub arch: Option<Arch>,
-    pub id: String,
-    pub r#type: Type,
-    pub source: String,
-    pub post_install: Option<String>,
-}
 
 pub enum InstallStatus {
     AlreadyInstalled,
@@ -167,21 +159,28 @@ fn handle_installation_finish_message(
     }
 }
 
-pub async fn install(config_path: &str) -> Result<()> {
-    let tools_installation_info = get_tools_installation_info(config_path).await?;
-    let tools_installation_info = filter_tools_installation_info(&tools_installation_info)?;
+pub async fn install(manifest_path: &str) -> Result<()> {
+    let toolkits_manifest = get_tookits_manifest(manifest_path).await?;
+    let tools_installation_detail = filter_tool_installation_detail(&toolkits_manifest.tools)?;
+
+    println!(
+    "Using Toolkits Manifest:\n  Path:    {}\n  Version: {}\n  Author:  {}\n",
+        manifest_path,
+        toolkits_manifest.version, 
+        toolkits_manifest.author
+    );
 
     match env::consts::OS {
         "macos" => {
             #[cfg(target_os = "macos")]
-            macos::macos_installation::install(tools_installation_info).await?;
+            macos::macos_installation::install(tools_installation_detail).await?;
         }
         "linux" => {
             linux::install().await?;
         }
         "windows" => {
             #[cfg(target_os = "windows")]
-            windows::windows_installation::install(tools_installation_info).await?;
+            windows::windows_installation::install(tools_installation_detail).await?;
         }
         _ => return Err(anyhow::anyhow!("Unsupported OS {}", std::env::consts::OS)),
     };

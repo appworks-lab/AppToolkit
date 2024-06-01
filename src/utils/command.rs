@@ -8,9 +8,9 @@ use std::{
 
 pub fn run_command_pipe_on_unix(program: &str, set_process_message: impl Fn(&str)) -> anyhow::Result<()> {
     let shell = get_default_shell();
-    let unix_config_path = get_unix_shell_config_path(&shell);
-    let mut command = if Path::new(&unix_config_path).exists() {
-        format!("source {}", &unix_config_path)
+    let unix_shell_config_path = get_unix_shell_config_path(&shell);
+    let mut command = if Path::new(&unix_shell_config_path).exists() {
+        format!("source {}", &unix_shell_config_path)
     } else {
         "".to_string()
     };
@@ -36,9 +36,9 @@ pub fn run_command_pipe_on_unix(program: &str, set_process_message: impl Fn(&str
 
 pub fn run_command_on_unix(program: &str) -> anyhow::Result<Output> {
     let shell = get_default_shell();
-    let unix_config_path = get_unix_shell_config_path(&shell);
-    let mut command = if Path::new(&unix_config_path).exists() {
-        format!("source {}", &unix_config_path)
+    let unix_shell_config_path = get_unix_shell_config_path(&shell);
+    let mut command = if Path::new(&unix_shell_config_path).exists() {
+        format!("source {}", &unix_shell_config_path)
     } else {
         "".to_string()
     };
@@ -77,9 +77,9 @@ fn is_windows_cmd_exists<T: AsRef<str>>(program: T) -> anyhow::Result<bool> {
 
 fn is_unix_cmd_exists<T: AsRef<str>>(program: T) -> anyhow::Result<bool> {
     let shell = get_default_shell();
-    let unix_config_path = get_unix_shell_config_path(&shell);
-    let mut command = if Path::new(&unix_config_path).exists() {
-        format!("source {}", &unix_config_path)
+    let unix_shell_config_path = get_unix_shell_config_path(&shell);
+    let mut command = if Path::new(&unix_shell_config_path).exists() {
+        format!("source {}", &unix_shell_config_path)
     } else {
         "".to_string()
     };

@@ -1,10 +1,23 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "description": "The tools installation info on Mac/Windows/Linux OS.",
+  "description": "Schema for the toolkit manifest, detailing the installation process for various tools on Mac/Windows/Linux OS.",
   "type": "object",
   "properties": {
+    "description": {
+      "type": "string",
+      "description": "Brief overview of the toolkit manifest."
+    },
+    "version": {
+      "type": "string",
+      "description": "Version of the toolkit manifest."
+    },
+    "author": {
+      "type": "string",
+      "description": "Author of the toolkit manifest."
+    },
     "tools": {
       "type": "array",
+      "description": "The list of tools to be installed by the toolkit.",
       "items": {
         "type": "object",
         "properties": {
@@ -14,7 +27,7 @@
           },
           "description": {
             "type": "string",
-            "description": "Description of the tool."
+            "description": "Brief description of the tool."
           },
           "installations": {
             "type": "array",
@@ -72,14 +85,6 @@
           }
         }
       }
-    },
-    "installType": {
-      "type": "string",
-      "enum": [
-        "parallel",
-        "sequential"
-      ],
-      "description": "The type of installation. 'parallel' installs all the tools in parallel, 'sequential' installs the tools one by one."
     }
   }
 }

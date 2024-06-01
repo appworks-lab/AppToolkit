@@ -2,28 +2,25 @@
 pub mod macos_installation {
     use crate::{
         download_file, extract_zip, installation::handle_installation_finish_message, is_cmd_exists,
-        run_command_on_unix, run_command_pipe_on_unix, InstallStatus, ToolInstallationInfo, Type, SPINNER_STYLE,
+        run_command_on_unix, run_command_pipe_on_unix, InstallStatus, InstallationDetailItem, Type, SPINNER_STYLE,
     };
     use anyhow::Result;
     use console::style;
     use indicatif::{MultiProgress, ProgressBar};
-    use std::clone::Clone;
-    use std::path::PathBuf;
-    use std::sync::{Arc, Mutex};
-    use std::{path::Path, time::Duration};
+    use std::{clone::Clone, path::{Path, PathBuf}, sync::{Arc, Mutex}, time::Duration};
     use tokio::fs;
     use walkdir::WalkDir;
 
-    pub async fn install(tools_installation_info: Vec<ToolInstallationInfo>) -> Result<()> {
+    pub async fn install(tools_installation_detail: Vec<InstallationDetailItem>) -> Result<()> {
         let multi_progress = MultiProgress::new();
-        let tools_count = tools_installation_info.len();
+        let tools_count = tools_installation_detail.len();
 
         let installation_results: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(Vec::with_capacity(tools_count)));
 
-        let handles = tools_installation_info
+        let handles = tools_installation_detail
             .into_iter()
             .enumerate()
-            .map(|(index, tool_installation_info)| {
+            .map(|(index, tool_installation_detail)| {
                 let pb = multi_progress.add(ProgressBar::new(100));
                 pb.set_style(SPINNER_STYLE.clone());
                 pb.set_prefix(format!("[{}/{}]", index + 1, tools_count));
@@ -31,14 +28,14 @@ pub mod macos_installation {
                 let installation_results = Arc::clone(&installation_results);
                 tokio::spawn(async move {
                     let mut installation_result: Option<Result<InstallStatus, anyhow::Error>> = None;
-                    match tool_installation_info.r#type {
+                    match tool_installation_detail.r#type {
                         Type::Zip => {
                             let zip_installation_result = install_tool_by_zip(
-                                &tool_installation_info.id,
-                                &tool_installation_info.source,
-                                tool_installation_info.post_install.as_deref(),
+                                &tool_installation_detail.id,
+                                &tool_installation_detail.source,
+                                tool_installation_detail.post_install.as_deref(),
                                 |msg| {
-                                    pb.set_message(format!("{}: {}", style(&tool_installation_info.name).bold(), msg))
+                                    pb.set_message(format!("{}: {}", style(&tool_installation_detail.name).bold(), msg))
                                 },
                             )
                             .await;
@@ -46,11 +43,11 @@ pub mod macos_installation {
                         }
                         Type::Dmg => {
                             let dmg_installation_result = install_tool_by_dmg(
-                                &tool_installation_info.id,
-                                &tool_installation_info.source,
-                                tool_installation_info.post_install.as_deref(),
+                                &tool_installation_detail.id,
+                                &tool_installation_detail.source,
+                                tool_installation_detail.post_install.as_deref(),
                                 |msg| {
-                                    pb.set_message(format!("{}: {}", style(&tool_installation_info.name).bold(), msg))
+                                    pb.set_message(format!("{}: {}", style(&tool_installation_detail.name).bold(), msg))
                                 },
                             )
                             .await;
@@ -58,11 +55,11 @@ pub mod macos_installation {
                         }
                         Type::Shell => {
                             let shell_installation_result = install_tool_by_shell(
-                                &tool_installation_info.id,
-                                &tool_installation_info.source,
-                                tool_installation_info.post_install.as_deref(),
+                                &tool_installation_detail.id,
+                                &tool_installation_detail.source,
+                                tool_installation_detail.post_install.as_deref(),
                                 |msg| {
-                                    pb.set_message(format!("{}: {}", style(&tool_installation_info.name).bold(), msg))
+                                    pb.set_message(format!("{}: {}", style(&tool_installation_detail.name).bold(), msg))
                                 },
                             )
                             .await;
@@ -71,8 +68,8 @@ pub mod macos_installation {
                         _ => {
                             let errror_message = format!(
                                 "Unsupported installation type: {}. App: {}",
-                                style(&tool_installation_info.r#type).bold(),
-                                style(&tool_installation_info.name).bold(),
+                                style(&tool_installation_detail.r#type).bold(),
+                                style(&tool_installation_detail.name).bold(),
                             );
                             pb.finish_with_message(errror_message.clone());
                             installation_results.lock().unwrap().push(errror_message);
@@ -81,7 +78,7 @@ pub mod macos_installation {
                     if let Some(installation_result) = installation_result {
                         handle_installation_finish_message(
                             &pb,
-                            &tool_installation_info.name,
+                            &tool_installation_detail.name,
                             installation_result,
                             &mut installation_results.lock().unwrap(),
                         );
@@ -227,7 +224,7 @@ pub mod macos_installation {
 mod test_install_fn {
     use super::macos_installation::install;
     use crate::{
-        installation::{filter_tools_installation_info, get_tools_installation_info},
+        installation::{filter_tool_installation_detail, get_tookits_manifest},
         run_command_on_unix,
     };
     use anyhow::Result;
@@ -235,10 +232,10 @@ mod test_install_fn {
 
     #[tokio::test]
     async fn test_install_on_macos() -> Result<()> {
-        let tools_installation_info = get_tools_installation_info("./tools-installation-info.json").await?;
-        let filtered_tools_installation_info = filter_tools_installation_info(&tools_installation_info)?;
+        let toolkits_manifest = get_tookits_manifest("./toolkits.manifest.json").await?;
+        let filtered_tools_installation_detail = filter_tool_installation_detail(&toolkits_manifest.tools)?;
 
-        install(filtered_tools_installation_info).await?;
+        install(filtered_tools_installation_detail).await?;
         check_path_existence("/Applications/Google Chrome.app")?;
         check_path_existence("/Applications/Visual Studio Code.app")?;
         check_script_existence("which fnm")?;
