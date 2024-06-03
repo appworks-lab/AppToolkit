@@ -4,7 +4,7 @@
 
 set -e
 
-VERSION="cli-v0.0.0-beta.5"
+VERSION="cli-v0.0.0"
 OS="$(uname -s)"
 
 case "${OS}" in
