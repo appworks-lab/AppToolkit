@@ -10,9 +10,6 @@ async fn main() -> anyhow::Result<()> {
             Commands::Install(opts) => {
                 install(&opts.manifest).await?;
             }
-            Commands::GitSSH(opts) => {
-                println!("GitSSH: {:?}", opts);
-            }
         },
         None => {
             eprintln!("No command provided");

@@ -1,20 +1,29 @@
-name: Tests and release
+name: Tests and Release
 
 on:
-  # push:
-  #   branches:
-  #     - main
-  #   tags-ignore:
-  #     - '**'
-  # pull_request:
+  # [push]
   workflow_dispatch
 
 jobs:
   test:
-    name: ${{ matrix.platform.os_name }} with rust ${{ matrix.toolchain }}
-    runs-on: ${{ matrix.platform.os }}
+    name: "unit tests"
+    runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-13, windows-latest]
+    steps:
+      - uses: hecrj/setup-rust-action@v2
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/checkout@v4
+      - name: Run tests
+        run: cargo test --verbose
+
+  build_and_release:
+    name: ${{ matrix.platform.os_name }} build and release
+    runs-on: ${{ matrix.platform.os }}
+    needs: test
+    if: (startsWith(github.ref, 'refs/tags/cli-v') || github.ref == 'refs/heads/test-release')
+    strategy:
       matrix:
         platform:
           - os_name: windows-x86_64
@@ -33,53 +42,36 @@ jobs:
             target: aarch64-apple-darwin
             bin: toolkit
             name: toolkit-macOS-aarch64.zip
-            skip_tests: true
-        toolchain: [stable]
     steps:
       - uses: actions/checkout@v4
-      - name: Cache cargo & target directories
-        uses: Swatinem/rust-cache@v2
-        with:
-          key: "v2"
-      - name: Run tests
-        uses: houseabsolute/actions-rust-cross@v0
-        with:
-          command: "test"
-          target: ${{ matrix.platform.target }}
-          toolchain: ${{ matrix.toolchain }}
-          args: "--locked --release"
-        if: ${{ !matrix.platform.skip_tests }}
+      - uses: Swatinem/rust-cache@v2
       - name: Build binary
         uses: houseabsolute/actions-rust-cross@v0
         with:
           command: "build"
           target: ${{ matrix.platform.target }}
-          toolchain: ${{ matrix.toolchain }}
           args: "--locked --release"
           strip: true
-        if: (startsWith(github.ref, 'refs/tags/cli-v') || github.ref == 'refs/heads/test-release')
         # Windows
       - name: Move binary to bin directory
         run: |
           cd target/${{ matrix.platform.target }}/release
           7z a ../../../${{ matrix.platform.name }} ${{ matrix.platform.bin }}
-        if: matrix.platform.os == 'windows-latest' && (startsWith(github.ref, 'refs/tags/cli-v') || github.ref == 'refs/heads/test-release')
+        if: matrix.platform.os == 'windows-latest'
         # Macos & Linux
       - name: Move binary to bin directory
         run: |
           cd target/${{ matrix.platform.target }}/release
           zip ../../../${{ matrix.platform.name }} ${{ matrix.platform.bin }}
-        if: matrix.platform.os != 'windows-latest' && (startsWith(github.ref, 'refs/tags/cli-v') || github.ref == 'refs/heads/test-release')
+        if: matrix.platform.os != 'windows-latest'
       - name: Publish release binary
         uses: actions/upload-artifact@v4
         with:
           name: toolkit-${{ matrix.platform.os_name }}
-          path: toolkit-*
-        if: (startsWith(github.ref, 'refs/tags/cli-v') || github.ref == 'refs/heads/test-release')
+          path: ${{ matrix.platform.name }}
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v2
         with:
           draft: true
-          files: "toolkit-*"
+          files: ${{ matrix.platform.name }}
           body_path: CHANGELOG.md
-        if: (startsWith(github.ref, 'refs/tags/cli-v') || github.ref == 'refs/heads/test-release')

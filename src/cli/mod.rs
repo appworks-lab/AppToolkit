@@ -11,8 +11,9 @@ pub struct Cli {
 pub enum Commands {
     #[command(name = "install", about = "Install toolkits.")]
     Install(InstallOpts),
-    #[command(name = "git-ssh", about = "Generate Git SSH secret key")]
-    GitSSH(GitSSHOpts),
+    // TODO: Implement the command
+    // #[command(name = "list", about = "Show the toolkits Details.")]
+    // List(ListOpts),
 }
 
 #[derive(Parser, Debug)]
