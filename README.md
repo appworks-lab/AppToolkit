@@ -23,7 +23,7 @@ curl -fsSL https://raw.githubusercontent.com/apptools-lab/AppToolkit/feat/cli/sh
 
 #### Parameters
 
-`--install` 
+`--install`
 Install the recommended toolkits (for web development)
 
 `--manifest`
@@ -31,7 +31,7 @@ Install the recommended toolkits (for web development)
 Install your toolkits by specifying the manifest file path. For example:
 
 ```shell
-curl -fsSL https://raw.githubusercontent.com/apptools-lab/AppToolkit/feat/cli/shell/install.sh | bash -s -- --manifest https://the-remote-server/your-toolkits-manifest-path
+curl -fsSL https://raw.githubusercontent.com/apptools-lab/AppToolkit/feat/cli/shell/install.sh | bash -s -- --install --manifest https://the-remote-server/your-toolkits-manifest-path
 ```
 
 ```shell
