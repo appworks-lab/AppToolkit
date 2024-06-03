@@ -1,13 +1,7 @@
 name: Lint
 
-on:
-  # push:
-  #   branches:
-  #     - main
-  #   tags-ignore:
-  #     - '**'
-  # pull_request:
-  workflow_dispatch
+on: [push]
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
