@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "description": "Schema for the toolkit manifest, detailing the installation process for various tools on Mac/Windows/Linux OS.",
+  "description": "Schema for the toolkit manifest, detailing the installation process for various toolkits on Mac/Windows/Linux OS.",
   "type": "object",
   "properties": {
     "description": {
@@ -15,9 +15,9 @@
       "type": "string",
       "description": "Author of the toolkit manifest."
     },
-    "tools": {
+    "toolkits": {
       "type": "array",
-      "description": "The list of tools to be installed by the toolkit.",
+      "description": "The list of toolkits to be installed by the toolkit.",
       "items": {
         "type": "object",
         "properties": {

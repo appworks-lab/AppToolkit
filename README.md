@@ -4,11 +4,13 @@ Toolkit is a CLI that helps you to initialize your development environment faste
 
 ## Features
 
-🌎 Cross-platform support (macOS, Windows, Linux)
+🌎 Cross-platform support (macOS, Windows. Linux is coming soon)
 
-✨ Custom your tools list and install them with one command
+✨ Support custom your toolkits and install them with one command
 
-🚀 Built with rust and install tools in parallel
+📦 Share your toolkits manifest with your team members
+
+🚀 Built with rust and install toolkits in parallel
 
 ## Quick Start
 
@@ -18,7 +20,7 @@ You can download the toolkit CLI from the [release page](https://github.com/appt
 
 ### 2. Extract the Zip
 
-Extract the zip file to your local directory. Then you will get the `toolkit` binary file(macOS & Linux) or `toolkit.exe` file(Windows).
+Extract the zip file to your local directory. Then you will get the `toolkit` binary file(macOS) or `toolkit.exe` file(Windows).
 
 ### 3. Run the Toolkit
 
@@ -34,9 +36,9 @@ $ .\toolkit.exe install
 $ .\toolkit.exe install --manifest <your-manifest-path>
 ```
 
-**NOTE: Currently, you may need to follow the installtion instructions to install tools manually on Windows system.**
+**NOTE: Currently, you may need to follow the installtion instructions to install toolkits manually on Windows system.**
 
-#### Macos & Linux
+#### Macos
 
 ```shell
 # cd the directory where the `toolkit` file is located.
@@ -52,7 +54,7 @@ $ ./toolkit install --manifest <your-manifest-path>
 
 ## Customization
 
-You can customize your tools which to be installed in a json file. Here is a [json schema](https://raw.githubusercontent.com/apptools-lab/AppToolkit/feat/cli/toolkits.schema.json) for you to follow and you can get the hint in the popular IDEs like Visual Studio Code, IntelliJ and so on. For Example:
+You can customize your toolkits which to be installed in a json file. Here is a [json schema](./toolkits.schema.json) for you to follow and you can get the hint in the popular IDEs like Visual Studio Code, IntelliJ and so on. For Example:
 
 ```json
 {
@@ -60,7 +62,7 @@ You can customize your tools which to be installed in a json file. Here is a [js
   "description": "<your toolkits schema description>",
   "author": "<your name or email>",
   "version": "<toolkits manifest version>",
-  "tools": [
+  "toolkits": [
     {
       "name": "Visual Studio Code",
       "description": "<vscode description>",
@@ -87,18 +89,20 @@ Now AppToolkit supports the following types of tool:
   - [ ] rpm
   - [ ] shell
 
-If you want to support more types of tools, you can submit a PR or issue to us.
+If you want to support more types of toolkits, you can submit a PR or issue to us.
 
-You can see [tookits.manifest.json](https://raw.githubusercontent.com/apptools-lab/AppToolkit/feat/cli/toolkits.manifest.json) for reference.
+You can see [tookits.manifest.json](./toolkits.manifest.json) for reference.
 
 After completion, you can save your toolkit schema in a json file locally or upload it to the remote server(GitHub repo or cloud storage). You can share your toolkit manifest with your team members or friends.
 
-Then you can install your custom tools with the following command:
+Then you can install your custom toolkits with the following command:
 
 ```shell
 # windows
-$ .\toolkit.exe install --manifest https://the-remote-server/your-manifest-path
+$ .\toolkit.exe install --manifest https://the-remote-server/your-toolkits-manifest-path
 
-# macos & linux
-$ ./toolkit install --manifest https://the-remote-server/your-manifest-path
+# macos
+$ ./toolkit install --manifest https://the-remote-server/your-toolkits-manifest-path
 ```
+
+> Toolkit is still in the early stage of development, and we are working hard to improve it. If you have any suggestions or ideas, please feel free to submit an issue or PR.

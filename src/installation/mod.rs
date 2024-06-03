@@ -21,15 +21,15 @@ pub struct ToolkitsManifest {
     pub author: String,
     pub version: String,
     pub description: String,
-    pub tools: Vec<ToolInstallationManifest>,
+    pub toolkits: Vec<ToolInstallationManifest>,
 }
 
 impl Display for ToolkitsManifest {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            " author: {}, version: {}, description: {}, tools: {:?}",
-            self.author, self.version, self.description, self.tools
+            " author: {}, version: {}, description: {}, toolkits: {:?}",
+            self.author, self.version, self.description, self.toolkits
         )
     }
 }
@@ -165,7 +165,7 @@ fn handle_installation_finish_message(
 
 pub async fn install(manifest_path: &str) -> Result<()> {
     let toolkits_manifest = get_tookits_manifest(manifest_path).await?;
-    let tools_installation_detail = filter_tool_installation_detail(&toolkits_manifest.tools)?;
+    let tools_installation_detail = filter_tool_installation_detail(&toolkits_manifest.toolkits)?;
 
     println!(
         "Using Toolkits Manifest:\n  Path:    {}\n  Version: {}\n  Author:  {}\n",

@@ -237,8 +237,8 @@ mod test_install_fn {
 
     #[tokio::test]
     async fn test_install_on_macos() -> Result<()> {
-        let toolkits_manifest = get_tookits_manifest("./toolkits.manifest.json").await?;
-        let filtered_tools_installation_detail = filter_tool_installation_detail(&toolkits_manifest.tools)?;
+        let toolkits_manifest = get_tookits_manifest("./fixtures/toolkits.manifest.json").await?;
+        let filtered_tools_installation_detail = filter_tool_installation_detail(&toolkits_manifest.toolkits)?;
 
         install(filtered_tools_installation_detail).await?;
         check_path_existence("/Applications/Google Chrome.app")?;

@@ -17,7 +17,7 @@ pub async fn get_tookits_manifest(manifest_path: &str) -> Result<ToolkitsManifes
 
     Ok(manifest)
 }
-// filter the tools based on the current OS and Arch
+// filter the toolkits based on the current OS and Arch
 pub fn filter_tool_installation_detail(
     tools_installation_manifest: &[ToolInstallationManifest],
 ) -> Result<Vec<InstallationDetailItem>> {
@@ -62,18 +62,18 @@ mod test_get_tookits_manifest {
 
     #[tokio::test]
     async fn test_with_local_file() -> Result<()> {
-        let toolkits_manifest = get_tookits_manifest("./toolkits.manifest.json").await?;
-        assert!(toolkits_manifest.tools.len() == 4);
+        let toolkits_manifest = get_tookits_manifest("./fixtures/toolkits.manifest.json").await?;
+        assert!(toolkits_manifest.toolkits.len() == 4);
         Ok(())
     }
 
     #[tokio::test]
     async fn test_with_remote_file() -> Result<()> {
         let toolkits_manifest = get_tookits_manifest(
-            "https://raw.githubusercontent.com/apptools-lab/AppToolkit/feat/cli/toolkits.manifest.json",
+            "https://raw.githubusercontent.com/apptools-lab/AppToolkit/feat/cli/fixtures/toolkits.manifest.json",
         )
         .await?;
-        assert!(toolkits_manifest.tools.len() == 4);
+        assert!(toolkits_manifest.toolkits.len() == 4);
         Ok(())
     }
 }

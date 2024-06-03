@@ -1,5 +1,5 @@
 {
-  "$schema": "./toolkits.schema.json",
+  "$schema": "../toolkits.schema.json",
   "author": "luhc228 <luhengchang228@126.com>",
   "version": "0.0.0",
   "description": "A toolkit schema for web development.",
@@ -35,18 +35,6 @@
           "type": "deb",
           "id": "",
           "source": "https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64"
-        }
-      ]
-    },
-    {
-      "name": "homebrew",
-      "description": "The Missing Package Manager for macOS (or Linux)",
-      "installations": [
-        {
-          "os": "macos",
-          "type": "shell",
-          "id": "brew",
-          "source": "/bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
         }
       ]
     },
