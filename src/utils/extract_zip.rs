@@ -11,9 +11,7 @@ pub fn extract_zip<T: AsRef<Path>>(zip_path: T, extract_path: &str) -> Result<()
 #[cfg(test)]
 mod tests {
     use std::fs;
-
     use crate::download_file;
-
     pub use super::*;
 
     #[cfg(target_os = "macos")]
