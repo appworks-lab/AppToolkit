@@ -1,7 +1,7 @@
 use anyhow::Result;
 use futures_util::StreamExt;
 use regex::Regex;
-use reqwest::{Client, Response, Url};
+use reqwest::{header::HeaderValue, Client, Response, Url};
 use std::{cmp::min, env, fs::File, io::Write, path::PathBuf};
 
 pub async fn download_file(url: &str, set_process_message: impl Fn(&str)) -> Result<PathBuf> {
@@ -44,33 +44,55 @@ pub async fn download_file(url: &str, set_process_message: impl Fn(&str)) -> Res
 }
 
 fn get_file_name_from_response(response: &Response) -> Result<String> {
-    let content_disposition = response
-        .headers()
-        .get("content-disposition")
-        .ok_or(anyhow::anyhow!("Failed to get content-disposition header"))?
+    let headers = response.headers();
+    let url = response.url().as_str();
+
+    if let Some(content_disposition) = headers.get("content-disposition") {
+        get_file_name_by_content_disposition(content_disposition, url)
+    } else {
+        get_last_segment_from_url(url)
+    }
+}
+
+fn get_last_segment_from_url(url: &str) -> Result<String> {
+    let url = Url::parse(url).map_err(|err| anyhow::anyhow!("Failed to parse url '{}'. Error: {}", url, err))?;
+    Ok(url.path_segments().unwrap().last().unwrap().to_string())
+}
+
+fn get_file_name_by_content_disposition(content_disposition: &HeaderValue, url: &str) -> Result<String> {
+    let content_disposition = content_disposition
         .to_str()
         .map_err(|err| anyhow::anyhow!("Failed to convert content-disposition header to string. Error: {}", err))?;
     if content_disposition == "attachment" {
-        let url = response.url();
-        let filename = Url::parse(response.url().as_str())
-            .map_err(|err| anyhow::anyhow!("Failed to parse url '{}'. Error: {}", url, err))
-            .map(|url| url.path_segments().unwrap().last().unwrap().to_string())?;
-        Ok(filename)
+        get_last_segment_from_url(url)
     } else {
         let re =
             Regex::new(r"filename=([^;]+)").map_err(|err| anyhow::anyhow!("Failed to create regex. Error: {}", err))?;
         let file_name = re
             .captures(content_disposition)
             .ok_or(anyhow::anyhow!(
-                "Failed to get file name from content-disposition header"
+                "failed to match filename field from content-disposition header"
             ))?
             .get(1)
             .ok_or(anyhow::anyhow!(
-                "Failed to get file name from content-disposition header"
+                "failed to get filename field from content-disposition header"
             ))?
             .as_str()
             .replace('"', "");
-
         Ok(file_name)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_download_file() -> Result<()> {
+        // Windows exe file
+        let download_result = download_file("https://releases.arc.net/windows/ArcInstaller.exe", |_| {}).await?;
+        assert!(download_result.exists());
+
+        Ok(())
     }
 }
