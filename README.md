@@ -31,14 +31,10 @@ Install the recommended toolkits (for web development)
 Install your toolkits by specifying the manifest file path. For example:
 
 ```shell
+# install the recommended toolkits (for web development)
+curl -fsSL https://raw.githubusercontent.com/apptools-lab/AppToolkit/feat/cli/shell/install.sh | bash -s -- --install
+# install your toolkits by specifying the manifest file path
 curl -fsSL https://raw.githubusercontent.com/apptools-lab/AppToolkit/feat/cli/shell/install.sh | bash -s -- --install --manifest https://the-remote-server/your-toolkits-manifest-path
-```
-
-```shell
-# install the recommended toolkits(for web development)
-$ .\toolkit.exe install
-# install your custom toolkits by specifying the manifest file path
-$ .\toolkit.exe install --manifest <your-manifest-path>
 ```
 
 ### Using a release binary
